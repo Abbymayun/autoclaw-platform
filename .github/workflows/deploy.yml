@@ -1,0 +1,33 @@
+name: Deploy to Server
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build Docker Image
+        run: docker build -t autoclaw-platform .
+
+      - name: Push to Aliyun Registry
+        run: |
+          docker tag autoclaw-platform registry.cn-hangzhou.aliyuncs.com/YOUR_NAMESPACE/autoclaw:latest
+          docker login --username=${{ secrets.ALIYUN_USERNAME }} --password=${{ secrets.ALIYUN_PASSWORD }} registry.cn-hangzhou.aliyuncs.com
+          docker push registry.cn-hangzhou.aliyuncs.com/YOUR_NAMESPACE/autoclaw:latest
+
+      - name: Deploy to Server
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: root
+          key: ${{ secrets.SSH_KEY }}
+          script: |
+            docker pull registry.cn-hangzhou.aliyuncs.com/YOUR_NAMESPACE/autoclaw:latest
+            docker stop autoclaw || true
+            docker rm autoclaw || true
+            docker run -d --name autoclaw -p 8000:8000 --restart=always registry.cn-hangzhou.aliyuncs.com/YOUR_NAMESPACE/autoclaw:latest

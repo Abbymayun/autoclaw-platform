@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AutoClaw Platform</title>
+<style>
+:root{--bg:#0d1117;--card:#161b22;--border:#30363d;--accent:#58a6ff;--green:#238636;--red:#da3633;--text:#c9d1d9}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);display:flex;height:100vh}
+.sidebar{width:220px;background:var(--card);border-right:1px solid var(--border);padding:16px 0;display:flex;flex-direction:column;flex-shrink:0}
+.sidebar h1{font-size:16px;color:var(--accent);padding:0 16px;margin-bottom:20px}
+.sidebar nav a{display:flex;align-items:center;gap:8px;padding:10px 16px;color:var(--text);text-decoration:none;font-size:13px;transition:.15s}
+.sidebar nav a:hover,.sidebar nav a.active{background:#1c2128;color:#fff}
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.toolbar{display:flex;align-items:center;gap:8px;padding:12px 20px;border-bottom:1px solid var(--border);background:var(--card)}
+.toolbar h2{font-size:15px;font-weight:600;flex:1}.btn{padding:6px 14px;border-radius:6px;border:none;font-size:12px;cursor:pointer;font-weight:600}.btn-primary{background:var(--green);color:#fff}.btn-primary:hover{background:#2ea043}.btn-accent{background:var(--accent);color:#fff}.btn-accent:hover{background:#79b8ff}.btn-danger{background:var(--red);color:#fff}
+.content{flex:1;overflow-y:auto;padding:20px;display:flex;flex-direction:column}
+/* Chat */
+.chat-area{flex:1;overflow-y:auto;margin-bottom:12px}
+.msg{display:flex;gap:10px;margin-bottom:16px;animation:fade .2s}.msg.user{flex-direction:row-reverse}
+.msg .avatar{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+.msg.user .avatar{background:#238636}.msg.ai .avatar{background:#1f6feb;color:#fff}
+.msg .bubble{max-width:75%;padding:10px 14px;border-radius:12px;font-size:13px;line-height:1.6;white-space:pre-wrap}
+.msg.user .bubble{background:#1f6feb;color:#fff;border-bottom-right-radius:4px}
+.msg.ai .bubble{background:var(--card);border:1px solid var(--border);border-bottom-left-radius:4px}
+.msg.ai .bubble.thinking{color:#8b949e;font-style:italic}
+.chat-input{display:flex;gap:8px}.chat-input textarea{flex:1;background:var(--card);border:1px solid var(--border);border-radius:8px;padding:10px;color:var(--text);font-size:13px;resize:none;outline:none;min-height:44px;max-height:120px;font-family:inherit}.chat-input textarea:focus{border-color:var(--accent)}
+/* Panels */
+.panel{display:none}.panel.active{display:block}.card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:12px}
+.card h3{font-size:14px;margin-bottom:10px;color:var(--accent)}.card label{font-size:12px;color:#8b949e;display:block;margin-bottom:4px}
+.card input,.card textarea,.card select{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:8px;color:var(--text);font-size:13px;margin-bottom:10px;font-family:inherit;outline:none}
+.card textarea{min-height:80px;resize:vertical}.card input:focus,.card textarea:focus{border-color:var(--accent)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+/* Animations */
+@keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+/* Responsive */
+@media(max-width:768px){.sidebar{width:60px}.sidebar h1{font-size:0}.sidebar nav a span{display:none}}
+</style>
+</head>
+<body>
+<div class="sidebar">
+  <h1>⚡ AutoClaw</h1>
+  <nav>
+    <a href="#" data-panel="chat" class="active" onclick="showPanel('chat')">💬 对话</a>
+    <a href="#" data-panel="browser" onclick="showPanel('browser')">🌐 浏览器</a>
+    <a href="#" data-panel="files" onclick="showPanel('files')">📁 文件</a>
+    <a href="#" data-panel="schedule" onclick="showPanel('schedule')">⏰ 定时任务</a>
+    <a href="#" data-panel="deploy" onclick="showPanel('deploy')">🚀 部署</a>
+    <a href="#" data-panel="settings" onclick="showPanel('settings')">⚙️ 设置</a>
+  </nav>
+</div>
+
+<div class="main">
+  <div class="toolbar"><h2 id="panelTitle">💬 AI 对话</h2><button class="btn btn-danger" onclick="clearChat()">清空</button></div>
+  <div class="content">
+    <!-- Chat Panel -->
+    <div class="panel active" id="panel-chat">
+      <div class="chat-area" id="chatBox"></div>
+      <div class="chat-input">
+        <textarea id="chatInput" placeholder="输入消息... (Enter发送, Shift+Enter换行)" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMsg()}"></textarea>
+        <button class="btn btn-accent" onclick="sendMsg()">发送</button>
+      </div>
+    </div>
+    <!-- Browser Panel -->
+    <div class="panel" id="panel-browser">
+      <div class="card"><h3>🌐 浏览器自动化</h3>
+        <label>URL或任务</label><input id="browserUrl" placeholder="https://... 或搜索关键词">
+        <button class="btn btn-accent" onclick="browserAction('open')">打开网页</button>
+        <button class="btn btn-accent" onclick="browserAction('screenshot')">截图</button>
+        <button class="btn btn-accent" onclick="browserAction('search')">搜索</button>
+      </div>
+      <div class="card" id="browserResult" style="display:none"><h3>结果</h3><pre id="browserOutput" style="font-size:12px;white-space:pre-wrap;max-height:400px;overflow:auto"></pre></div>
+    </div>
+    <!-- Files Panel -->
+    <div class="panel" id="panel-files">
+      <div class="card"><h3>📁 文件管理</h3>
+        <input type="file" id="fileUpload" onchange="uploadFile()">
+        <div id="fileList" style="margin-top:12px;font-size:13px">加载中...</div>
+      </div>
+    </div>
+    <!-- Schedule Panel -->
+    <div class="panel" id="panel-schedule">
+      <div class="card"><h3>⏰ 新建定时任务</h3>
+        <label>任务名称</label><input id="scName" placeholder="e.g. daily_report">
+        <label>Cron表达式</label><input id="scCron" placeholder="0 9 * * * (每天9点)">
+        <label>消息内容</label><textarea id="scMsg" placeholder="定时发送的消息"></textarea>
+        <button class="btn btn-accent" onclick="addSchedule()">添加</button>
+      </div>
+      <div class="card"><h3>任务列表</h3><div id="scList">加载中...</div></div>
+    </div>
+    <!-- Deploy Panel -->
+    <div class="panel" id="panel-deploy">
+      <div class="card"><h3>🚀 一键部署</h3>
+        <label>提交信息</label><input id="commitMsg" value="AutoClaw Platform Update">
+        <button class="btn btn-accent" onclick="gitPush()">推送 GitHub</button>
+      </div>
+      <div class="card"><h3>☁️ 部署到服务器</h3>
+        <select id="deployTarget" style="margin-bottom:10px">
+          <option value="aliyun">阿里云</option>
+          <option value="vercel">Vercel</option>
+          <option value="netlify">Netlify</option>
+        </select>
+        <button class="btn btn-accent" onclick="deploy()">开始部署</button>
+      </div>
+      <div class="card" id="deployResult" style="display:none"><h3>部署日志</h3><pre id="deployLog" style="font-size:12px;white-space:pre-wrap;max-height:400px;overflow:auto"></pre></div>
+    </div>
+    <!-- Settings -->
+    <div class="panel" id="panel-settings">
+      <div class="card"><h3>⚙️ API配置</h3>
+        <label>API地址</label><input id="cfgApiBase" placeholder="http://10.16.11.195/v1">
+        <label>API Key</label><input id="cfgApiKey" type="password" placeholder="sk-...">
+        <label>模型</label><input id="cfgModel" placeholder="gpt-4o">
+        <button class="btn btn-accent" onclick="saveConfig()">保存</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const API=window.location.origin
+let currentPanel='chat'
+
+function showPanel(p){
+  document.querySelectorAll('.panel').forEach(e=>e.classList.remove('active'))
+  document.querySelectorAll('.sidebar nav a').forEach(e=>e.classList.remove('active'))
+  document.getElementById('panel-'+p).classList.add('active')
+  document.querySelector('[data-panel='+p+']').classList.add('active')
+  currentPanel=p
+  const titles={chat:'💬 AI 对话',browser:'🌐 浏览器自动化',files:'📁 文件管理',schedule:'⏰ 定时任务',deploy:'🚀 部署',settings:'⚙️ 设置'}
+  document.getElementById('panelTitle').textContent=titles[p]
+  if(p==='files') loadFiles()
+  if(p==='schedule') loadSchedule()
+  if(p==='settings') loadConfig()
+}
+
+// ===== CHAT =====
+function addBubble(role,content,thinking){var d=document.getElementById('chatBox'),m=document.createElement('div')
+  m.className='msg '+role;m.innerHTML='<div class="avatar">'+(role==='user'?'👤':'🤖')+'</div><div class="bubble'+(thinking?' thinking':'')+'">'+content+'</div>';d.appendChild(m);d.scrollTop=d.scrollHeight;return m}
+
+async function sendMsg(){
+  var inp=document.getElementById('chatInput'),msg=inp.value.trim();if(!msg)return;inp.value=''
+  addBubble('user',msg);var b=addBubble('ai','思考中...',true)
+  try{
+    var r=await fetch(API+'/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:msg})})
+    var d=await r.json()
+    b.querySelector('.bubble').textContent=d.reply;b.querySelector('.bubble').classList.remove('thinking')
+    document.getElementById('chatBox').scrollTop=document.getElementById('chatBox').scrollHeight
+  }catch(e){b.querySelector('.bubble').textContent='错误: '+e.message;b.querySelector('.bubble').classList.remove('thinking')}
+}
+
+function clearChat(){document.getElementById('chatBox').innerHTML=''}
+
+// ===== BROWSER =====
+async function browserAction(type){
+  var url=document.getElementById('browserUrl').value.trim();if(!url)return
+  document.getElementById('browserResult').style.display='block'
+  document.getElementById('browserOutput').textContent='执行中...'
+  try{var r=await fetch(API+'/api/browser',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({url:type==='open'?url:'',task:url,action_type:type})})
+    var d=await r.json();document.getElementById('browserOutput').textContent=JSON.stringify(d,null,2)}
+  catch(e){document.getElementById('browserOutput').textContent='错误: '+e.message}
+}
+
+// ===== FILES =====
+async function loadFiles(){
+  try{var r=await fetch(API+'/api/files'),d=await r.json()
+    document.getElementById('fileList').innerHTML=d.files.map(f=>'<div style="padding:4px 0;border-bottom:1px solid var(--border)">'+ (f.type==='dir'?'📁':'📄')+' '+f.name+' <span style="color:#8b949e;font-size:11px">'+(f.type==='file'?Math.round(f.size/1024)+'KB':'')+'</span></div>').join('')||'空'}
+  catch(e){document.getElementById('fileList').textContent='加载失败'}
+}
+async function uploadFile(){
+  var f=document.getElementById('fileUpload').files[0];if(!f)return
+  var fd=new FormData();fd.append('file',f)
+  await fetch(API+'/api/upload',{method:'POST',body:fd});loadFiles()
+}
+
+// ===== SCHEDULE =====
+async function addSchedule(){
+  var n=document.getElementById('scName').value.trim(),c=document.getElementById('scCron').value.trim(),m=document.getElementById('scMsg').value.trim()
+  if(!n||!c||!m)return alert('请填写完整')
+  await fetch(API+'/api/schedule',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:n,cron_expr:c,message:m})})
+  loadSchedule()
+}
+async function loadSchedule(){
+  try{var r=await fetch(API+'/api/schedule/list'),d=await r.json()
+    document.getElementById('scList').innerHTML=Object.entries(d.jobs).map(([k,v])=>'<div style="padding:6px 0;border-bottom:1px solid var(--border)">🟢 '+k+' <span style="color:#8b949e">'+v.cron+'</span></div>').join('')||'暂无任务'}
+  catch(e){document.getElementById('scList').textContent='加载失败'}
+}
+
+// ===== DEPLOY =====
+async function gitPush(){
+  var msg=document.getElementById('commitMsg').value
+  try{var r=await fetch(API+'/api/git/push',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({commit_message:msg})});var d=await r.json();alert(d.success?'推送成功':'推送失败: '+d.error)}
+  catch(e){alert('错误: '+e.message)}
+}
+async function deploy(){
+  var tgt=document.getElementById('deployTarget').value
+  document.getElementById('deployResult').style.display='block';document.getElementById('deployLog').textContent='部署中...'
+  try{var r=await fetch(API+'/api/deploy',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({deploy_target:tgt})});var d=await r.json()
+    document.getElementById('deployLog').textContent=d.steps.join('\n\n')}
+  catch(e){document.getElementById('deployLog').textContent='错误: '+e.message}
+}
+
+// ===== SETTINGS =====
+async function loadConfig(){
+  try{var r=await fetch(API+'/api/config'),d=await r.json()
+    document.getElementById('cfgApiBase').value=d.api_base||'';document.getElementById('cfgApiKey').value=d.api_key||'';document.getElementById('cfgModel').value=d.model||'gpt-4o'}
+  catch(e){}
+}
+async function saveConfig(){
+  await fetch(API+'/api/config',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({api_base:document.getElementById('cfgApiBase').value,api_key:document.getElementById('cfgApiKey').value,model:document.getElementById('cfgModel').value})})
+  alert('配置已保存')
+}
+
+// Init
+loadConfig()
+</script>
+</body>
+</html>
