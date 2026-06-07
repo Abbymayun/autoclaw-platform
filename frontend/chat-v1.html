@@ -1,179 +1,1606 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-<meta charset="UTF-8">
-<title>AI Chat · PPT · GitHub Deploy</title>
-<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-<style>
-*{margin:0;padding:0;box-sizing:border-box;font-family:system-ui}
-body{display:flex;height:100vh;overflow:hidden;background:#f7f8fa}
-.left{width:280px;background:#fff;border-right:1px solid #e0e0e0;display:flex;flex-direction:column;height:100vh;overflow:hidden;flex-shrink:0}
-.cfg{padding:16px;flex-shrink:0;border-bottom:1px solid #f0f0f0}
-.hw{flex:1;padding:0 14px;display:flex;flex-direction:column;overflow:hidden}
-.hl{flex:1;overflow-y:auto;padding-bottom:10px}
-.ncb{width:100%;padding:9px;background:#0070e0;color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:13px;margin-bottom:6px}
-.ncb.green{background:#16a4a3}.ncb.dark{background:#333}.ncb.blue{background:#2563eb}.ncb.cyan{background:#0ea5e9}
-.ht{font-size:12px;color:#999;margin:10px 0 6px}
-.hi{position:relative;padding:8px 10px;border-radius:6px;margin-bottom:4px;cursor:pointer;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.hi.on{background:#e9f2ff;color:#0070e0}.hi:hover{background:#f2f6fc}
-.main{flex:1;display:flex;flex-direction:column;height:100vh;overflow:hidden}
-.mb{flex:1;padding:20px;overflow-y:auto;background:#f7f8fa}
-.ib{padding:14px;background:#fff;border-top:1px solid #e0e0e0;display:flex;gap:10px;flex-shrink:0}
-.ib textarea{flex:1;padding:12px;border:1px solid #ddd;border-radius:8px;height:60px;max-height:140px;font-size:14px;resize:vertical;outline:none}
-.ib button{width:90px;height:60px;border-radius:8px;background:#0070e0;color:#fff;border:none;cursor:pointer;font-size:14px}
-.pp{display:none;flex:1;padding:24px;overflow-y:auto;background:#f7f8fa}
-.ps{margin-bottom:20px}.ps h2{font-size:16px;margin-bottom:10px}
-.ps textarea{width:100%;height:100px;max-height:200px;padding:10px;border-radius:6px;border:1px solid #ddd;resize:vertical}
-.btn-row{display:flex;gap:8px;margin-top:10px}
-.btn{font-size:12px;padding:8px 14px;border-radius:6px;border:none;cursor:pointer}
-.btn-p{background:#0070e0;color:#fff}.btn-g{background:#16a4a3;color:#fff}.btn-d{background:#555;color:#fff}
-.oebox{background:#fff;border:1px solid #d0b0f0;border-radius:8px;padding:14px;min-height:200px;max-height:350px;overflow-y:auto;white-space:pre-wrap;font-size:13px;line-height:1.6;outline:none}
-.msg{padding:12px 14px;border-radius:12px;margin-bottom:14px;max-width:70%;line-height:1.7;max-height:55vh;overflow-y:auto;animation:fi .2s}
-@keyframes fi{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
-.msg.u{background:#0072ee;color:#fff;margin-left:auto;border-bottom-right-radius:4px}
-.msg.b{background:#fff;border:1px solid #e0e0e0;border-bottom-left-radius:4px;color:#212529}
-.lmsg{background:#fff;border:1px solid #e0e0e0;border-radius:12px;border-bottom-left-radius:4px;padding:14px 18px;max-width:70%;margin-bottom:14px}
-.dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:#8b949e;margin:0 3px;animation:ld 1.4s infinite ease-in-out}
-.dot:nth-child(2){animation-delay:.2s}.dot:nth-child(3){animation-delay:.4s}
-@keyframes ld{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
-.code-block{position:relative;background:#0d1117;color:#f0f6fc;padding:14px;border-radius:8px;margin:8px 0;max-height:320px;overflow:auto}
-.code-btns{position:absolute;top:8px;right:8px;display:flex;gap:5px}
-.code-btns button{padding:4px 10px;font-size:11px;border-radius:4px;border:none;cursor:pointer;color:#fff}
-.cb-copy{background:#238636}.cb-preview{background:#1f6feb}.cb-project{background:#6e40c9}
-input,select{width:100%;padding:10px;margin:6px 0;border:1px solid #ddd;border-radius:8px;font-size:13px;background:#fafafa;outline:none}
-::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:#ccc;border-radius:3px}
-</style>
+ <meta charset="UTF-8">
+ <title>AI对话 + PPT生成助手 + 三方授权</title>
+ <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+ <style>
+ *{margin:0;padding:0;box-sizing:border-box;font-family:system-ui}
+ body{display:flex;height:100vh;overflow:hidden;background:#f7f8fa}
+
+ .left{
+ width:320px;
+ background:#fff;
+ border-right:1px solid #e9ecef;
+ display:flex;
+ flex-direction:column;
+ height:100vh;
+ overflow:hidden;
+ flex-shrink:0;
+ position:fixed;
+ left:0;
+ top:0;
+ z-index:10;
+ }
+ .config-wrap{padding:20px;flex-shrink:0}
+ .history-wrap{
+ flex:1;
+ padding:0 20px;
+ display:flex;
+ flex-direction:column;
+ overflow:hidden;
+ }
+ .history-list{
+ flex:1;
+ overflow-y:auto;
+ padding-bottom:10px;
+ }
+ .new-chat-btn{
+ width:100%;
+ padding:10px;
+ background:#0070e0;
+ color:#fff;
+ border:none;
+ border-radius:10px;
+ cursor:pointer;
+ font-size:14px;
+ margin-bottom:8px;
+ }
+ .ppt-btn{background:#16a4a3 !important;}
+ .auth-btn{background:#333942 !important}
+ .github-push-btn{background:#2563eb !important;}
+ .project-btn{background:#0ea5e9 !important;}
+ .history-title{font-size:13px;color:#888;margin:12px 0 8px}
+ .history-item{
+ position:relative;
+ padding:9px 10px;
+ border-radius:8px;
+ margin-bottom:6px;
+ cursor:pointer;
+ font-size:14px;
+ white-space:nowrap;
+ overflow:hidden;
+ text-overflow:ellipsis;
+ user-select:none;
+ }
+ .history-item.active{background:#e9f2ff;color:#0070e0}
+ .history-item:hover{background:#f2f6fc}
+ .more-btn {
+ display:none;
+ position:absolute;
+ right:4px;
+ top:50%;
+ transform:translateY(-50%);
+ width:22px;
+ height:22px;
+ border:0;
+ background:transparent;
+ font-size:18px;
+ color:#999;
+ border-radius:4px;
+ cursor:pointer;
+ }
+ .history-item:hover .more-btn {display:block}
+ .more-btn:hover{background:#e4e7ec;color:#333}
+ .global-more-menu{
+ position:fixed;
+ width:135px;
+ background:#fff;
+ border-radius:8px;
+ box-shadow:0 3px 14px rgba(0,0,0,0.16);
+ border:1px solid #eee;
+ z-index:99999;
+ overflow:hidden;
+ }
+ .global-more-menu .menu-item{padding:9px 13px;font-size:13px;color:#333;cursor:pointer}
+ .global-more-menu .menu-item:hover{background:#f3f4f6}
+
+ .main{
+ flex:1;
+ display:flex;
+ flex-direction:column;
+ height:100vh;
+ overflow:hidden;
+ margin-left:320px;
+ }
+ #chatPage{
+ flex:1;
+ display:flex;
+ flex-direction:column;
+ overflow:hidden;
+ }
+ .messages{
+ flex:1;
+ padding:24px;
+ overflow-y:auto;
+ background:#f7f8fa;
+ }
+ .input-box{
+ padding:16px;
+ background:#fff;
+ border-top:1px solid #e9ecef;
+ display:flex;
+ gap:12px;
+ flex-shrink:0;
+ }
+ textarea{
+ flex:1;
+ padding:14px;
+ border:1px solid #dee2e6;
+ border-radius:10px;
+ height:72px;
+ font-size:14px;
+ resize:none;
+ }
+ .input-box button{
+ width:102px;
+ height:72px;
+ border-radius:10px;
+ background:#0070e0;
+ color:#fff;
+ border:none;
+ cursor:pointer;
+ }
+
+ #pptPage{
+ display:none;
+ flex:1;
+ flex-direction:column;
+ padding:24px;
+ overflow-y:auto;
+ background:#f7f8fa;
+ height:100%;
+ }
+
+ #authPage{
+ display:none;
+ padding:40px;
+ background:#1e1e22;
+ color:#fff;
+ height:100%;
+ overflow-y:auto;
+ }
+ .auth-container{
+ display:flex;
+ gap:24px;
+ max-width:1200px;
+ margin:0 auto;
+ flex-wrap:wrap;
+ }
+ .auth-card{
+ flex:1;
+ min-width:300px;
+ background:#27272c;
+ padding:28px;
+ border-radius:14px;
+ }
+ .auth-card h3{
+ margin-bottom:16px;
+ font-size:18px;
+ }
+ .auth-desc{
+ color:#aaa;
+ font-size:14px;
+ margin-bottom:20px;
+ line-height:1.5;
+ }
+ .auth-btn-sty{
+ padding:12px 20px;
+ border:none;
+ border-radius:8px;
+ cursor:pointer;
+ font-size:14px;
+ margin-right:8px;
+ margin-bottom:8px;
+ }
+ .github-btn{background:#2563eb;color:#fff}
+ .feishu-btn{background:#0066ff;color:#fff}
+ .ding-btn{background:#27AE60;color:#fff}
+ .logout-btn{background:#ef4444;color:#fff}
+ .auth-success{
+ color:#4ade80;
+ font-weight:bold;
+ margin-top:16px;
+ font-size:15px;
+ }
+
+ .msg{
+ padding:14px 16px;
+ border-radius:14px;
+ margin-bottom:16px;
+ max-width:72%;
+ line-height:1.6;
+ }
+ .user{background:#0072ee;color:#fff;margin-left:auto;border-bottom-right-radius:4px}
+ .bot{background:#fff;border:1px solid #e9ecef;border-bottom-left-radius:4px;color:#212529}
+ 
+ .code-block {
+ position:relative;
+ background:#1e1e22;
+ color:#fff;
+ padding:12px;
+ border-radius:8px;
+ margin:8px 0;
+ overflow-x:auto;
+ }
+ .code-btns {
+ position:absolute;
+ top:8px;
+ right:8px;
+ display:flex;
+ gap:6px;
+ }
+ .code-btns button {
+ padding:4px 8px;
+ font-size:12px;
+ border-radius:4px;
+ border:none;
+ cursor:pointer;
+ background:#2563eb;
+ color:#fff;
+ }
+ .code-btns .preview-btn {background:#059669;}
+ .code-btns .github-code-btn {background:#2563eb;}
+
+ input,select{
+ width:100%;
+ padding:11px;
+ margin:7px 0;
+ border:1px solid #dee2e6;
+ border-radius:10px;
+ background:#fcfcfc;
+ }
+ button{padding:10px;background:#0070e0;color:#fff;border:none;border-radius:10px;width:100%;margin-top:6px;cursor:pointer}
+ 
+ .loading-msg{background:#fff;border:1px solid #e9ecef;border-radius:14px;border-bottom-left-radius:4px;padding:14px 16px;max-width:72%;margin-bottom:16px}
+ .dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:#869099;margin:0 3px;animation:load 1.4s infinite ease-in-out}
+ .dot:nth-child(2){animation-delay:0.2s}
+ .dot:nth-child(3){animation-delay:0.4s}
+ @keyframes load{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+ 
+ .ppt-step{margin-bottom:24px}
+ .ppt-title{font-size:18px;font-weight:600;margin-bottom:12px;color:#111}
+ .ppt-desc{font-size:14px;color:#666;margin-bottom:12px}
+ .ppt-input{width:100%;height:120px;padding:12px;border-radius:8px;border:1px solid #ddd}
+ .ppt-box{
+ background:#fff;
+ border:1px solid #e57eeb;
+ border-radius:10px;
+ padding:16px;
+ height:500px;
+ overflow-y:auto;
+ white-space:pre-wrap;
+ line-height:1.6;
+ font-size:14px;
+ }
+ .ppt-btns{display:flex;gap:10px;margin-top:12px}
+ .ppt-btns button{padding:10px 16px;border-radius:8px;border:none;cursor:pointer}
+ .btn-green{background:#16a4a3;color:#fff}
+ .btn-blue{background:#0070e0;color:#fff}
+ .btn-gray{background:#f1f5f9;color:#333}
+
+ .code-wrapper{
+ position:relative;
+ margin-top:12px;
+ }
+ pre{
+ background:#1e1e22;
+ color:#dcdcdc;
+ padding:20px;
+ border-radius:10px;
+ overflow-x:auto;
+ font-size:14px;
+ line-height:1.6;
+ min-height:200px;
+ }
+ .code-actions{
+ position:absolute;
+ top:12px;
+ right:12px;
+ display:flex;
+ gap:8px;
+ white-space:nowrap;
+ }
+ .code-actions button{
+ padding:6px 12px;
+ border-radius:6px;
+ border:none;
+ cursor:pointer;
+ font-size:12px;
+ white-space:nowrap;
+ }
+ .copy-btn{background:#2563eb;color:#fff}
+ .preview-btn{background:#059669;color:#fff}
+ .upload-github-btn{background:#2563eb!important;color:white}
+
+ /* 授权配置弹窗 */
+ .auth-mask{
+ position:fixed;top:0;left:0;width:100%;height:100%;
+ background:rgba(0,0,0,0.55);display:none;
+ align-items:center;justify-content:center;z-index:99999;
+ }
+ .auth-dialog{
+ width:500px;background:#fff;padding:24px;border-radius:12px;
+ max-height:80vh;overflow-y:auto;
+ }
+ .auth-dialog h3{margin-bottom:16px}
+ .config-item{margin-bottom:12px}
+ .config-item label{font-size:14px;color:#333;margin-bottom:4px;display:block}
+ .help-icon{
+ display:inline-block;width:18px;height:18px;
+ background:#0070e0;color:#fff;border-radius:50%;
+ text-align:center;line-height:18px;
+ font-size:12px;cursor:pointer;margin-left:6px;
+ }
+
+ /* 配置教程弹窗 */
+ .guide-mask{
+ position:fixed;top:0;left:0;width:100%;height:100%;
+ background:rgba(0,0,0,0.6);display:none;
+ align-items:center;justify-content:center;z-index:999999;
+ }
+ .guide-box{
+ width:700px;background:#fff;padding:24px;
+ border-radius:12px;max-height:80vh;overflow-y:auto;
+ }
+ .guide-box h3{margin-bottom:16px;color:#222}
+ .guide-box h4{margin-top:20px;margin-bottom:10px;color:#0070e0}
+ .guide-box p{line-height:1.6;margin-bottom:8px;font-size:14px;color:#333}
+ .guide-close{
+ margin-top:20px;padding:10px 20px;
+ background:#0070e0;color:#fff;border:none;
+ border-radius:8px;cursor:pointer;
+ }
+
+ /* 项目管理页面 */
+ #projectPage {
+ display: none;
+ padding: 20px;
+ background: #f7f8fa;
+ height: 100%;
+ overflow-y: auto;
+ }
+ .project-title {
+ font-size: 20px;
+ font-weight: 600;
+ margin-bottom: 16px;
+ }
+ .project-back-btn {
+ padding: 6px 12px;
+ background: #0ea5e9;
+ color: #fff;
+ border: none;
+ border-radius: 6px;
+ cursor: pointer;
+ margin-bottom: 12px;
+ }
+ .project-list {
+ display: flex;
+ flex-direction:column;
+ gap: 10px;
+ }
+ .project-item {
+ background: #fff;
+ padding: 14px 16px;
+ border-radius: 10px;
+ box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+ cursor: pointer;
+ }
+ .project-item.active {
+ border: 2px solid #2563eb;
+ background: #eff6ff;
+ }
+ .project-item-name {
+ font-weight: 500;
+ margin-bottom: 4px;
+ }
+ .project-item-time {
+ font-size: 12px;
+ color: #888;
+ }
+ .file-tree {
+ background: #fff;
+ padding: 16px;
+ border-radius: 10px;
+ height: calc(100vh - 180px);
+ overflow-y: auto;
+ }
+ .file-item {
+ padding: 6px 10px;
+ cursor: pointer;
+ border-radius: 4px;
+ display: flex;
+ align-items: center;
+ gap: 6px;
+ }
+ .file-item:hover {
+ background: #f1f5f9;
+ }
+ .folder-item {
+ padding: 6px 10px;
+ cursor: pointer;
+ font-weight: 500;
+ display: flex;
+ align-items: center;
+ gap: 6px;
+ }
+ .file-editor {
+ margin-top:16px;
+ display:flex;
+ flex-direction:column;
+ gap:10px;
+ }
+ .file-editor-toolbar {
+ display:flex;
+ gap:8px;
+ }
+ .file-editor-btn {
+ padding:6px 12px;
+ background:#0ea5e9;
+ color:#fff;
+ border:none;
+ border-radius:6px;
+ cursor:pointer;
+ }
+ .file-editor-textarea {
+ width:100%;
+ height:300px;
+ padding:12px;
+ border-radius:8px;
+ border:1px solid #ddd;
+ font-family:monospace;
+ font-size:14px;
+ resize:vertical;
+ }
+ .empty-project {
+ text-align:center;
+ padding:60px 20px;
+ color:#999;
+ }
+
+ /* GitHub 发布页面 */
+ #githubPublishPage {
+ display: none;
+ width: 100%;
+ height: 100vh;
+ padding: 40px 20px;
+ background: #f7f8fa;
+ overflow-y: auto;
+ box-sizing: border-box;
+ }
+ .publish-title {
+ font-size: 24px;
+ font-weight: bold;
+ margin-bottom: 20px;
+ color: #2563eb;
+ text-align: center;
+ }
+ .publish-desc {
+ font-size: 14px;
+ color: #666;
+ margin-bottom: 16px;
+ text-align: center;
+ }
+ .publish-project-list {
+ background: #fff;
+ border-radius: 12px;
+ padding: 16px;
+ max-height: 480px;
+ overflow-y: auto;
+ margin-bottom: 20px;
+ box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+ max-width:700px;
+ margin-left:auto;
+ margin-right:auto;
+ }
+ .publish-btn {
+ background: #2563eb;
+ color: #fff;
+ padding: 16px;
+ border-radius: 10px;
+ font-size: 16px;
+ border: none;
+ cursor: pointer;
+ width: 100%;
+ max-width:700px;
+ display:block;
+ margin:0 auto;
+ font-weight:600;
+ }
+ </style>
 </head>
 <body>
+
+<!-- 配置教程弹窗 -->
+<div class="guide-mask" id="guideMask">
+ <div class="guide-box" id="guideBox">
+ <div id="githubGuide" style="display:none">
+ <h3>📌 GitHub Client ID 配置教程</h3>
+ <p>1. 打开 GitHub 开发者平台：<a href="https://github.com/settings/developers" target="_blank">https://github.com/settings/developers</a></p>
+ <p>2. 登录你的 GitHub 账号，点击「New OAuth App」</p>
+ <p>3. 填写应用信息：</p>
+ <p>- Application name：自定义（如 AI助手）</p>
+ <p>- Homepage URL：http://127.0.0.1:5500/</p>
+ <p>- Authorization callback URL：http://127.0.0.1:5500/</p>
+ <p>4. 点击「Register application」</p>
+ <p>5. 创建完成后，复制「Client ID」填入本系统即可</p>
+ </div>
+ <div id="feishuGuide" style="display:none">
+ <h3>📌 飞书 App ID 配置教程</h3>
+ <p>1. 打开飞书开放平台：<a href="https://open.feishu.cn/" target="_blank">https://open.feishu.cn/</a></p>
+ <p>2. 登录企业管理员账号 → 进入开发者后台 → 创建「企业自建应用」</p>
+ <p>3. 创建完成后，复制「App ID（cli_开头）」</p>
+ <p>4. 进入：开发配置 → 安全设置 → 重定向 URL</p>
+ <p>5. 添加回调地址（必须完全一致）：<b>http://127.0.0.1:5500/</b></p>
+ <p>6. 进入：权限管理 → 开通「contact:user.base:readonly」用户信息权限</p>
+ <p>7. 进入：应用发布 → 创建版本并发布应用</p>
+ <p>8. 把 App ID 填入本系统即可正常授权</p>
+ </div>
+ <div id="dingGuide" style="display:none">
+ <h3>📌 钉钉 Client ID 配置教程</h3>
+ <p>1. 打开钉钉开发者后台：<a href="https://open-dev.dingtalk.com/" target="_blank">https://open-dev.dingtalk.com/</a></p>
+ <p>2. 登录 → 应用开发 → 企业内部应用 → 创建应用</p>
+ <p>3. 复制 **Client ID**（也叫 AppKey）</p>
+ <p>4. 左侧菜单：登录与授权 → 授权管理 → 网页授权</p>
+ <p>5. 添加 **回调域名/redirect_uri**：<b>http://127.0.0.1:5500/</b></p>
+ <p>6. 权限管理 → 开通个人信息相关权限</p>
+ <p>7. 发布应用 → 完成配置</p>
+ </div>
+ <div id="githubTokenGuide" style="display:none">
+ <h3>📌 GitHub Token 配置教程（代码上传专用）</h3>
+ <p>✅ 生成地址：<a href="https://github.com/settings/tokens" target="_blank">https://github.com/settings/tokens</a></p>
+ <p>1. Token name 随便填（如 ai-upload）</p>
+ <p>2. Expiration 选择 No expiration（永久有效）</p>
+ <p>3. Permissions 权限勾选 repo（必须全勾）</p>
+ <p>4. 点击 Generate token 生成</p>
+ <p>5. 生成后只显示一次，复制粘贴到输入框，丢失无法找回</p>
+ </div>
+ <button class="guide-close" onclick="closeGuide()">关闭教程</button>
+ </div>
+</div>
+
+<!-- 授权配置弹窗 -->
+<div class="auth-mask" id="authConfigMask">
+ <div class="auth-dialog">
+ <h3>第三方授权配置</h3>
+ <div class="config-item">
+ <label>
+ GitHub Client ID
+ <span class="help-icon" onclick="showGithubGuide()">?</span>
+ </label>
+ <input id="githubCid" placeholder="输入 GitHub ClientID">
+ </div>
+ <div class="config-item">
+ <label>
+ 飞书 App ID
+ <span class="help-icon" onclick="showFeishuGuide()">?</span>
+ </label>
+ <input id="feishuAppId" placeholder="输入飞书应用 AppId">
+ </div>
+ <div class="config-item">
+ <label>
+ 钉钉 Client ID
+ <span class="help-icon" onclick="showDingGuide()">?</span>
+ </label>
+ <input id="dingClientId" placeholder="输入钉钉 Client ID">
+ <small style="color:#f00">⚠回调地址：http://127.0.0.1:5500/</small>
+ </div>
+ <div class="config-item">
+ <label>
+ GitHub Token (上传代码用)
+ <span class="help-icon" onclick="showGithubTokenGuide()">?</span>
+ </label>
+ <input id="githubToken" placeholder="输入 GitHub Token" value="" placeholder="输入 GitHub Token">
+ </div>
+ <button onclick="saveAllAuthConfig()" style="margin-top:16px">保存配置</button>
+ </div>
+</div>
+
+<!-- 左侧永久固定配置栏 -->
 <div class="left">
-<div class="cfg"><h3 style="font-size:14px;margin-bottom:10px">配置</h3>
-<input id="apiBase" value="http://47.110.254.62:8000/api/chat" placeholder="API地址">
-<select id="mSel"><option value="glm-5v-turbo">GLM-5V Turbo</option><option value="gpt-4o">GPT-4o</option><option value="deepseek-v4-pro">DeepSeek V4</option></select>
-<button class="ncb" onclick="testConn()" style="font-size:12px;padding:7px;margin-top:4px">测试连通</button>
-<div id="st" style="margin-top:6px;font-size:12px"></div>
-</div>
-<div class="hw">
-<button class="ncb" onclick="newChat()">+ 新建对话</button>
-<button class="ncb green" onclick="newPPT()">PPT 生成助手</button>
-<div class="ht">历史对话</div>
-<div class="hl" id="hl"></div>
-</div>
+ <div class="config-wrap">
+ <h3>⚙配置</h3>
+ <input id="baseUrl" value="http://localhost:9091/v1" readonly>
+ <input id="apiKey" value="voVHB960PuPIgHnHK42wb7q84XnJgd6jhACq009RUSeLWRyQ">
+ 
+ <!-- 完整模型列表 -->
+ <select id="modelSel">
+ <option value="qwen3.5-plus">qwen3.5-plus【PPT/办公】</option>
+ <option value="qwen3-coder-plus">qwen3-coder-plus【代码】</option>
+ <option value="deepseek-v3.2">deepseek-v3.2【通用】</option>
+ <option value="deepseek-r1">deepseek-r1【推理】</option>
+ <option value="hunyuan-large-lite">hunyuan-large-lite【混元】</option>
+ <option value="hunyuan-large">hunyuan-large【混元增强】</option>
+ <option value="360gpt2-pro">360gpt2-pro【360】</option>
+ <option value="360gpt-turbo">360gpt-turbo【360极速】</option>
+ <option value="doubao-2.8-lite">doubao-2.8-lite【豆包】</option>
+ <option value="doubao-3.5-pro">doubao-3.5-pro【豆包专业】</option>
+ <option value="spark-pro">spark-pro【讯飞星火】</option>
+ <option value="spark-lite">spark-lite【讯飞星火轻量】</option>
+ <option value="wxbai-v2">wxbai-v2【文心百炼】</option>
+ <option value="wxbai-v3">wxbai-v3【文心百炼增强】</option>
+ </select>
+
+ <button id="testBtn">测试连通</button>
+ <div id="statusTxt" style="margin-top:8px;font-size:13px"></div>
+ </div>
+
+ <div class="history-wrap">
+ <button class="new-chat-btn" id="gotoChatBtn">✍ 新建对话</button>
+ <button class="new-chat-btn ppt-btn" id="gotoPPtBtn">🎨 PPT生成助手</button>
+ <button class="new-chat-btn auth-btn" onclick="openAuthPage()">🔐 第三方授权</button>
+ <button class="new-chat-btn" onclick="openAuthConfig()" style="background:#555">⚙️ 授权配置</button>
+ <button class="new-chat-btn project-btn" onclick="openProjectManager()">📂 项目管理</button>
+ <button class="new-chat-btn github-push-btn" onclick="openGitHubPublishPage()">🚀 上传代码到GitHub</button>
+ 
+ <!-- 授权状态 -->
+ <div style="font-size:13px;color:#555;margin-top:6px;line-height:1.4">
+ <div>GitHub：<span id="githubStatus">❌ 未授权</span></div>
+ <div>飞书：<span id="feishuStatus">❌ 未授权</span></div>
+ <div>钉钉：<span id="dingStatus">❌ 未授权</span></div>
+ </div>
+
+ <div class="history-title">历史对话</div>
+ <div class="history-list" id="historyList"></div>
+ </div>
 </div>
 
+<!-- 右侧主内容区域 -->
 <div class="main">
-<div class="mb" id="mb"></div>
-<div class="ib"><textarea id="inp" placeholder="输入内容，Enter 发送" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();send()}"></textarea><button onclick="send()">发送</button></div>
+ <div id="chatPage">
+ <div class="messages" id="msgBox"></div>
+ <div class="input-box">
+ <textarea id="userInput" placeholder="输入内容回车发送"></textarea>
+ <button onclick="sendChat()">发送</button>
+ </div>
+ </div>
 
-<div class="pp" id="ppPage">
-<div class="ps" id="ps1"><h2>Step 1: 输入PPT主题</h2><textarea id="ppT" placeholder="例: 人工智能的未来"></textarea>
-<div class="btn-row"><button class="btn btn-p" onclick="genOL()">生成大纲</button><button class="btn btn-d" onclick="goChat()">返回对话</button></div></div>
-<div class="ps" id="ps2" style="display:none"><h2>Step 2: 编辑大纲</h2><div class="oebox" contenteditable="true" id="ppO"></div>
-<div style="margin-top:8px"><label>风格:</label><select id="ppS"><option>商务风格</option><option>科技风格</option><option>简约风格</option><option>学术风格</option><option>中国风</option><option>暗黑风</option></select></div>
-<div class="btn-row"><button class="btn btn-g" onclick="genS()">生成网页版PPT</button><button class="btn btn-d" onclick="psS(1)">上一步</button></div></div>
-<div class="ps" id="ps3" style="display:none"><h2>Step 3: 预览PPT</h2>
-<div class="code-block" id="ppC" style="background:#1a1a2e;font-family:monospace;font-size:11px;white-space:pre-wrap;display:none"></div>
-<div id="ppLoad" style="text-align:center;padding:40px;color:#999">生成中，约30-60秒...</div></div>
-</div>
+ <div id="pptPage">
+ <div class="ppt-step" id="pptStep1">
+ <div class="ppt-title">Step 1：输入PPT主题</div>
+ <textarea class="ppt-input" id="pptTopic" placeholder="请输入主题，例如：2025年产品规划"></textarea>
+ <div class="ppt-btns">
+ <button class="btn-blue" id="genOutlineBtn">生成大纲</button>
+ <button class="btn-gray" onclick="goToChat()">返回对话</button>
+ </div>
+ </div>
+
+ <div class="ppt-step" id="pptStep2" style="display:none">
+ <div class="ppt-title">Step 2：编辑PPT大纲（可直接修改）</div>
+ <div class="ppt-box" contenteditable="true" id="outlineEdit"></div>
+ <div style="margin-top:10px">
+ <label>选择风格：</label>
+ <select id="pptStyle" style="width:auto;display:inline-block">
+ <option value="商务风格">商务风格</option>
+ <option value="科技风格">科技风格</option>
+ <option value="简约风格">简约风格</option>
+ <option value="学术风格">学术风格</option>
+ <option value="中国风">中国风</option>
+ <option value="欧美风">欧美风</option>
+ <option value="日系风">日系风</option>
+ <option value="清新风">清新风</option>
+ <option value="暗黑风">暗黑风</option>
+ <option value="党政风">党政风</option>
+ </select>
+ </div>
+ <div class="ppt-btns">
+ <button class="btn-green" id="genPPTPagesBtn">生成网页版PPT</button>
+ <button class="btn-gray" onclick="pptStep2Hide()">返回上一步</button>
+ </div>
+ </div>
+
+ <div class="ppt-step" id="pptStep3" style="display:none">
+ <div class="ppt-title">Step 3：网页版PPT代码</div>
+ <div class="code-wrapper">
+ <div class="code-actions">
+ <button class="copy-btn" onclick="copyPPTCode()">复制代码</button>
+ <button class="preview-btn" onclick="previewPPT()">预览效果</button>
+ <button class="upload-github-btn" onclick="uploadPPTToGitHub()">🚀上传到GitHub</button>
+ </div>
+ <pre id="pptCodeArea"></pre>
+ </div>
+ </div>
+ </div>
+
+ <div id="authPage">
+ <h2 style="margin-bottom:24px;text-align:center">第三方账号授权</h2>
+ <div class="auth-container">
+ <div class="auth-card">
+ <h3>GitHub 授权</h3>
+ <div class="auth-desc">使用 GitHub 账号登录授权</div>
+ <button class="auth-btn-sty github-btn" onclick="goGithubAuth()">前往 GitHub 授权</button>
+ <button class="auth-btn-sty logout-btn" onclick="logoutGithub()">取消 GitHub 授权</button>
+ <div id="githubResult" class="auth-success"></div>
+ </div>
+
+ <div class="auth-card">
+ <h3>飞书 授权</h3>
+ <div class="auth-desc">使用飞书账号登录授权</div>
+ <button class="auth-btn-sty feishu-btn" onclick="goFeishuAuth()">前往飞书授权</button>
+ <button class="auth-btn-sty logout-btn" onclick="logoutFeishu()">取消飞书授权</button>
+ <div id="feishuResult" class="auth-success"></div>
+ </div>
+
+ <div class="auth-card">
+ <h3>钉钉 授权</h3>
+ <div class="auth-desc">使用钉钉账号登录授权</div>
+ <button class="auth-btn-sty ding-btn" onclick="goDingAuth()">前往钉钉授权</button>
+ <button class="auth-btn-sty logout-btn" onclick="logoutDing()">取消钉钉授权</button>
+ <div id="dingResult" class="auth-success"></div>
+ </div>
+ </div>
+ </div>
+
+ <!-- 项目管理页面 -->
+ <div id="projectPage">
+ <div class="project-title">📂 项目管理</div>
+ <div id="projectListView"></div>
+ <div id="projectDetailView" style="display:none;">
+ <button class="project-back-btn" onclick="backToProjectList()">← 返回项目列表</button>
+ <div id="projectFileTree" class="file-tree"></div>
+ <div id="fileEditor" class="file-editor" style="display:none;">
+ <div class="file-editor-toolbar">
+ <button class="file-editor-btn" onclick="saveCurrentFile()">保存修改</button>
+ <button class="file-editor-btn" onclick="previewCurrentFile()">预览效果</button>
+ </div>
+ <textarea id="fileEditContent" class="file-editor-textarea"></textarea>
+ </div>
+ </div>
+ </div>
+
+ <!-- GitHub 发布页面 -->
+ <div id="githubPublishPage">
+ <div class="publish-title">🚀 发布项目到 GitHub</div>
+ <div class="publish-desc">请选择需要发布的项目</div>
+ <div class="publish-project-list" id="publishProjectList"></div>
+ <button class="publish-btn" onclick="publishSelectedProjectToGitHub()">✅ 确认发布到 GitHub</button>
+ </div>
 </div>
 
 <script>
-var api=document.getElementById('apiBase').value;
-var mb=document.getElementById('mb'),hl=document.getElementById('hl'),cs={},currentChat=null;
-var CH=JSON.parse(localStorage.getItem('ch_list')||'[]');
-var ppHTML='',ppData=null,ppStep=1;
+// ==================== 全局变量 ====================
+let selectedPublishProjectId = null;
 
-function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
-function ts(){return new Date().toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit'})}
+// ==================== 项目管理 ====================
+let projects = JSON.parse(localStorage.getItem('ai_projects')) || [];
+let currentEditingProject = null;
+let currentEditingFile = null;
 
-function addMsg(role,txt,loading){
-  var d=document.createElement('div');
-  if(loading){d.className='lmsg';d.innerHTML='<span class="dot"></span><span class="dot"></span><span class="dot"></span>';}
-  else{d.className='msg '+(role==='user'?'u':'b');d.innerHTML=role==='assistant'?renderMsg(txt):esc(txt)}
-  mb.appendChild(d);mb.scrollTop=mb.scrollHeight;return role==='assistant'?d:null
+function saveProjects() {
+ localStorage.setItem('ai_projects', JSON.stringify(projects));
 }
 
-function renderMsg(text){
-  marked.setOptions({breaks:true,gfm:true});
-  var html=marked.parse(text);
-  var tmp=document.createElement('div');tmp.innerHTML=html;
-  var blocks=tmp.querySelectorAll('pre code');
-  blocks.forEach(function(ce,i){
-    var code=ce.textContent.trimEnd(),lang='code';
-    var m=(ce.className||'').match(/language-(\w+)/);if(m)lang=m[1];
-    var id='c'+Date.now()+i;cs[id]={lang:lang,code:code};
-    var w=document.createElement('div');w.className='code-block';
-    w.innerHTML='<div class="code-btns"><button class="cb-copy" onclick="cC(\''+id+'\',this)">复制</button><button class="cb-preview" onclick="pV(\''+id+'\')">预览</button><button class="cb-project" onclick="aP(\''+id+'\')">存入项目</button></div><pre><code>'+esc(code)+'</code></pre>';
-    ce.parentElement.replaceWith(w);
-  });
-  return tmp.innerHTML;
+function openProjectManager() {
+ document.getElementById('chatPage').style.display = 'none';
+ document.getElementById('pptPage').style.display = 'none';
+ document.getElementById('authPage').style.display = 'none';
+ document.getElementById('githubPublishPage').style.display = 'none';
+ document.getElementById('projectPage').style.display = 'block';
+ document.getElementById('projectDetailView').style.display = 'none';
+ document.getElementById('projectListView').style.display = 'block';
+ renderProjectList();
 }
 
-function cC(id,btn){var c=cs[id];if(!c)return;navigator.clipboard.writeText(c.code).then(function(){btn.textContent='已复制'}).catch(function(){var t=document.createElement('textarea');t.value=c.code;document.body.appendChild(t);t.select();document.execCommand('copy');document.body.removeChild(t);btn.textContent='已复制'});setTimeout(function(){btn.textContent='复制'},1500)}
-function pV(id){var c=cs[id];if(!c||!c.code)return;var w=window.open('','_blank');if(!w){alert('弹窗被拦截');return}w.document.open();w.document.write(c.code);w.document.close()}
-function aP(id){var c=cs[id];if(!c)return;var nm=prompt('项目名称:',(currentChat&&currentChat.title)||'代码片段');if(!nm)return;var ext=c.lang==='html'?'.html':c.lang==='py'?'.py':'.txt';saveProj(nm+ext,c.code)}
-
-function saveProj(name,code){
-  var ps=JSON.parse(localStorage.getItem('lproj')||'[]');
-  ps.unshift({id:'p'+Date.now(),name:name,code:code,t:new Date().toLocaleString('zh-CN')});
-  localStorage.setItem('lproj',JSON.stringify(ps.slice(0,50)));
+function renderProjectList() {
+ const container = document.getElementById('projectListView');
+ if (projects.length === 0) {
+ container.innerHTML = '<div class="empty-project">暂无项目，生成AI代码后自动保存</div>';
+ return;
+ }
+ let html = '<div class="project-list">';
+ projects.forEach(p => {
+ html += `
+ <div class="project-item" onclick="openProject(${p.id})">
+ <div class="project-item-name">${p.name}</div>
+ <div class="project-item-time">${p.createTime}</div>
+ </div>`;
+ });
+ html += '</div>';
+ container.innerHTML = html;
 }
 
-function send(){
-  var msg=document.getElementById('inp').value.trim();if(!msg)return;
-  document.getElementById('inp').value='';
-  // Init or use current chat
-  if(!currentChat){currentChat={id:'c'+Date.now(),title:msg.substring(0,20),msgs:[]};CH.unshift(currentChat);saveCH()}
-  currentChat.msgs.push({role:'user',txt:msg});
-  addMsg('user',msg);var e=addMsg('a','',true);
-  var btn=document.querySelector('.ib button');btn.disabled=true;
-  fetch(api,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:msg,model:document.getElementById('mSel').value})})
-  .then(function(r){return r.json()}).then(function(d){
-    currentChat.msgs.push({role:'a',txt:d.reply});saveCH();
-    if(e)e.outerHTML='<div class="msg b">'+renderMsg(d.reply||'')+'</div>';
-    mb.scrollTop=mb.scrollHeight;btn.disabled=false;rH();
-  }).catch(function(err){if(e)e.outerHTML='<div class="msg b" style="color:red">错误: '+err.message+'</div>';btn.disabled=false});
+function openProject(pid) {
+ currentEditingProject = projects.find(p => p.id === pid);
+ document.getElementById('projectListView').style.display = 'none';
+ document.getElementById('projectDetailView').style.display = 'block';
+ renderFileTree();
 }
 
-function newChat(){currentChat=null;mb.innerHTML='';document.getElementById('ppPage').style.display='none';document.querySelector('.mb').style.display='block'}
-function testConn(){var b=event.target;b.textContent='测试中...';b.disabled=true;fetch(api,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:'hi',model:document.getElementById('mSel').value})}).then(function(r){return r.json()}).then(function(d){document.getElementById('st').innerHTML=d.reply?'<span style="color:#4caf50">已连接</span>':'<span style="color:#f00">失败</span>'}).catch(function(){document.getElementById('st').innerHTML='<span style="color:#f00">失败</span>'}).finally(function(){b.textContent='测试连通';b.disabled=false})}
-
-function saveCH(){localStorage.setItem('ch_list',JSON.stringify(CH.slice(0,30)))}
-function rH(){
-  hl.innerHTML=CH.map(function(c){return '<div class="hi'+(currentChat&&currentChat.id===c.id?' on':'')+'" onclick="openCH(\''+c.id+'\')">'+esc(c.title)+'</div>'}).join('')||'暂无历史'
-}
-function openCH(id){
-  var c=CH.find(function(x){return x.id===id});if(!c)return;
-  currentChat=c;mb.innerHTML='';document.querySelector('.mb').style.display='block';document.getElementById('ppPage').style.display='none';
-  c.msgs.forEach(function(m){
-    if(m.role==='user')addMsg('user',m.txt);
-    else{var d=addMsg('a',m.txt);}
-  });rH();
+function backToProjectList() {
+ currentEditingProject = null;
+ currentEditingFile = null;
+ document.getElementById('projectDetailView').style.display = 'none';
+ document.getElementById('projectListView').style.display = 'block';
 }
 
-/* PPT */
-function goChat(){document.getElementById('ppPage').style.display='none';document.querySelector('.mb').style.display='block'}
-function newPPT(){currentChat=null;ppData=null;ppHTML='';document.querySelector('.mb').style.display='none';document.getElementById('ppPage').style.display='flex';psS(1)}
-function psS(n){ppStep=n;document.getElementById('ps1').style.display=n===1?'block':'none';document.getElementById('ps2').style.display=n===2?'block':'none';document.getElementById('ps3').style.display=n===3?'block':'none'}
-function genOL(){
-  var t=document.getElementById('ppT').value.trim();if(!t){alert('请输入主题');return}
-  var b=event.target;b.textContent='生成中...';b.disabled=true;
-  fetch(api,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:'为以下主题生成PPT大纲(JSON格式,包含title和slides数组,每页有title和points): '+t,model:document.getElementById('mSel').value})})
-  .then(function(r){return r.json()}).then(function(d){
-    try{ppData=JSON.parse(d.reply.match(/\{[\s\S]*\}/)[0])}catch(e){ppData={title:t,slides:[{title:'简介',points:['介绍主题']}]}}
-    document.getElementById('ppO').innerText=JSON.stringify(ppData,null,2);psS(2)
-  }).catch(function(e){alert(e.message)}).finally(function(){b.textContent='生成大纲';b.disabled=false});
+function renderFileTree() {
+ const tree = document.getElementById('projectFileTree');
+ tree.innerHTML = '';
+ function renderNode(node, depth = 0) {
+ const pad = depth * 16 + 'px';
+ if (node.type === 'folder') {
+ const div = document.createElement('div');
+ div.style.paddingLeft = pad;
+ div.className = 'folder-item';
+ div.innerText = '📁 ' + node.name;
+ tree.appendChild(div);
+ node.children.forEach(child => renderNode(child, depth + 1));
+ } else {
+ const div = document.createElement('div');
+ div.style.paddingLeft = pad;
+ div.className = 'file-item';
+ div.innerText = '📄 ' + node.name;
+ div.onclick = () => {
+ currentEditingFile = node;
+ document.getElementById('fileEditContent').value = node.content;
+ document.getElementById('fileEditor').style.display = 'flex';
+ };
+ tree.appendChild(div);
+ }
+ }
+ currentEditingProject.tree.forEach(node => renderNode(node));
 }
-function genS(){
-  try{ppData=JSON.parse(document.getElementById('ppO').innerText)}catch(e){alert('格式错误');return}
-  var s=document.getElementById('ppS').value;psS(3);document.getElementById('ppLoad').style.display='block';document.getElementById('ppC').style.display='none';
-  fetch(api,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:'根据大纲生成HTML幻灯片: '+JSON.stringify(ppData)+', 风格: '+s+', 用<section class=slide>包裹每页, 深色主题, 支持键盘切换',model:document.getElementById('mSel').value})})
-  .then(function(r){return r.json()}).then(function(d){
-    var h=d.reply||'';var m0=h.match(/```html\n([\s\S]*?)```/)||h.match(/<html[\s\S]*<\/html>/i);
-    ppHTML=m0?m0[1]||m0[0]:h;document.getElementById('ppC').textContent=ppHTML;document.getElementById('ppC').style.display='block';document.getElementById('ppLoad').style.display='none';
-    saveProj('PPT_'+ppData.title+'.html',ppHTML);
-  }).catch(function(e){document.getElementById('ppLoad').innerHTML='错误: '+e.message});
+
+function saveCurrentFile() {
+ if (!currentEditingFile) return;
+ currentEditingFile.content = document.getElementById('fileEditContent').value;
+ saveProjects();
+ alert('保存成功！');
 }
-rH();
+
+function previewCurrentFile() {
+ if (!currentEditingFile) return;
+ const blob = new Blob([currentEditingFile.content], { type: 'text/html' });
+ window.open(URL.createObjectURL(blob), '_blank');
+}
+
+function autoCreateFullProject(reply, userQuery) {
+ const htmlMatch = reply.match(/<html[\s\S]*?<\/html>/i);
+ const cssMatch = reply.match(/```css([\s\S]*?)```/i);
+ const jsMatch = reply.match(/```javascript([\s\S]*?)```/i) || reply.match(/```js([\s\S]*?)```/i);
+ const tree = [];
+ if (htmlMatch) tree.push({ type: 'file', name: 'index.html', content: htmlMatch[0] });
+ if (cssMatch) tree.push({ type: 'file', name: 'style.css', content: cssMatch[1].trim() });
+ if (jsMatch) tree.push({ type: 'file', name: 'app.js', content: jsMatch[1].trim() });
+ if (tree.length === 0) return;
+ const project = {
+ id: Date.now(),
+ name: userQuery.length > 12 ? userQuery.slice(0, 12) + '...' : userQuery || '新项目',
+ createTime: new Date().toLocaleString(),
+ tree: tree
+ };
+ projects.unshift(project);
+ saveProjects();
+}
+
+// 创建单文件项目（用于PPT/代码块快速上传）
+function createSingleFileProject(code, fileName, projectName) {
+ const tree = [{ type: 'file', name: fileName, content: code }];
+ const project = {
+ id: Date.now(),
+ name: projectName,
+ createTime: new Date().toLocaleString(),
+ tree: tree
+ };
+ projects.unshift(project);
+ saveProjects();
+ return project.id;
+}
+
+// ==================== GitHub 发布 ====================
+function openGitHubPublishPage() {
+ document.getElementById('chatPage').style.display = 'none';
+ document.getElementById('pptPage').style.display = 'none';
+ document.getElementById('authPage').style.display = 'none';
+ document.getElementById('projectPage').style.display = 'none';
+ document.getElementById('githubPublishPage').style.display = 'block';
+ renderPublishProjectList();
+}
+
+function renderPublishProjectList() {
+ const container = document.getElementById('publishProjectList');
+ if (projects.length === 0) {
+ container.innerHTML = '<div class="empty-project">暂无项目可发布</div>';
+ return;
+ }
+ let html = '';
+ projects.forEach(p => {
+ const activeCls = selectedPublishProjectId == p.id ? 'active' : '';
+ html += `
+ <div class="project-item ${activeCls}" onclick="selectPublishProject(${p.id})">
+ <div class="project-item-name">${p.name}</div>
+ <div class="project-item-time">${p.createTime}</div>
+ </div>`;
+ });
+ container.innerHTML = html;
+}
+
+function selectPublishProject(pid) {
+ selectedPublishProjectId = pid;
+ renderPublishProjectList();
+}
+
+async function publishSelectedProjectToGitHub() {
+ const token = localStorage.getItem("GITHUB_TOKEN");
+ if (!token) {
+ alert("❌ 请先配置 GitHub Token！");
+ openAuthConfig();
+ return;
+ }
+ if (!selectedPublishProjectId) {
+ alert("❌ 请先选择要发布的项目！");
+ return;
+ }
+ const project = projects.find(p => p.id === selectedPublishProjectId);
+ if (!project || !project.tree || project.tree.length === 0) {
+ alert("❌ 该项目无代码文件，无法发布！");
+ return;
+ }
+ const repoName = prompt("请输入 GitHub 仓库名称", project.name.replace(/[^\w]/g, '-') || "ai-project");
+ if (!repoName) return;
+ try {
+ alert("⏳ 正在创建仓库并上传代码，请稍候...");
+ const createRepo = await fetch("https://api.github.com/user/repos", {
+ method: "POST",
+ headers: {
+ "Authorization": `token ${token}`,
+ "Accept": "application/vnd.github.v3+json"
+ },
+ body: JSON.stringify({ name: repoName, private: false, auto_init: false })
+ });
+ const repoData = await createRepo.json();
+ if (!createRepo.ok) throw new Error("仓库创建失败：" + (repoData.message || "未知错误"));
+ const fullName = repoData.full_name;
+ const mainFile = project.tree.find(f => f.name === "index.html") || project.tree[0];
+ const content = btoa(unescape(encodeURIComponent(mainFile.content)));
+ await fetch(`https://api.github.com/repos/${fullName}/contents/${mainFile.name}`, {
+ method: "PUT",
+ headers: {
+ "Authorization": `token ${token}`,
+ "Accept": "application/vnd.github.v3+json"
+ },
+ body: JSON.stringify({ message: "AI项目自动发布", content: content })
+ });
+ alert(`✅ 发布成功！\n仓库地址：${repoData.html_url}`);
+ window.open(repoData.html_url, '_blank');
+ } catch (err) {
+ alert("❌ 发布失败：" + err.message);
+ }
+}
+
+// ==================== 授权 ====================
+const REDIRECT_URI = "http://127.0.0.1:5500/";
+const AUTH_SOURCE = { FEISHU: "feishu", GITHUB: "github", DING: "ding" };
+
+function showGithubGuide(){
+ document.getElementById("guideMask").style.display = "flex";
+ document.getElementById("githubGuide").style.display = "block";
+ document.getElementById("feishuGuide").style.display = "none";
+ document.getElementById("dingGuide").style.display = "none";
+ document.getElementById("githubTokenGuide").style.display = "none";
+}
+function showFeishuGuide(){
+ document.getElementById("guideMask").style.display = "flex";
+ document.getElementById("feishuGuide").style.display = "block";
+ document.getElementById("githubGuide").style.display = "none";
+ document.getElementById("dingGuide").style.display = "none";
+ document.getElementById("githubTokenGuide").style.display = "none";
+}
+function showDingGuide(){
+ document.getElementById("guideMask").style.display = "flex";
+ document.getElementById("dingGuide").style.display = "block";
+ document.getElementById("githubGuide").style.display = "none";
+ document.getElementById("feishuGuide").style.display = "none";
+ document.getElementById("githubTokenGuide").style.display = "none";
+}
+function showGithubTokenGuide(){
+ document.getElementById("guideMask").style.display = "flex";
+ document.getElementById("githubTokenGuide").style.display = "block";
+ document.getElementById("githubGuide").style.display = "none";
+ document.getElementById("feishuGuide").style.display = "none";
+ document.getElementById("dingGuide").style.display = "none";
+}
+function closeGuide(){ document.getElementById("guideMask").style.display = "none"; }
+
+function openAuthConfig(){
+ document.getElementById("authConfigMask").style.display = "flex";
+ document.getElementById("githubCid").value = localStorage.getItem("GITHUB_CID") || "";
+ document.getElementById("feishuAppId").value = localStorage.getItem("FEISHU_APPID") || "";
+ document.getElementById("dingClientId").value = localStorage.getItem("DING_CLIENTID") || "";
+ document.getElementById("githubToken").value = localStorage.getItem("GITHUB_TOKEN") || "";
+}
+function saveAllAuthConfig(){
+ let githubCid = document.getElementById("githubCid").value.trim();
+ let feishuId = document.getElementById("feishuAppId").value.trim();
+ let dingId = document.getElementById("dingClientId").value.trim();
+ let githubToken = document.getElementById("githubToken").value.trim();
+ localStorage.setItem("GITHUB_CID", githubCid);
+ localStorage.setItem("FEISHU_APPID", feishuId);
+ localStorage.setItem("DING_CLIENTID", dingId);
+ localStorage.setItem("GITHUB_TOKEN", githubToken);
+ alert("配置保存成功！");
+ document.getElementById("authConfigMask").style.display = "none";
+}
+
+function openAuthPage(){
+ document.getElementById('chatPage').style.display = 'none';
+ document.getElementById('pptPage').style.display = 'none';
+ document.getElementById('authPage').style.display = 'block';
+ document.getElementById('projectPage').style.display = 'none';
+ document.getElementById('githubPublishPage').style.display = 'none';
+ refreshAuthStatus();
+}
+
+function goGithubAuth(){
+ let cid = localStorage.getItem("GITHUB_CID");
+ if(!cid){ alert("请先配置 GitHub ClientID！"); openAuthConfig(); return; }
+ localStorage.setItem("LAST_AUTH_TYPE", AUTH_SOURCE.GITHUB);
+ let url = new URL("https://github.com/login/oauth/authorize");
+ url.searchParams.set("client_id", cid);
+ url.searchParams.set("redirect_uri", REDIRECT_URI);
+ url.searchParams.set("scope", "user repo");
+ location.href = url.toString();
+}
+function logoutGithub(){
+ if(!confirm("确定取消 GitHub 授权？")) return;
+ localStorage.removeItem("GITHUB_AUTH_CODE");
+ refreshAuthStatus();
+ alert("GitHub 授权已取消！");
+}
+
+function goFeishuAuth(){
+ let appId = localStorage.getItem("FEISHU_APPID");
+ if(!appId){ alert("请先配置飞书 App ID！"); openAuthConfig(); return; }
+ localStorage.setItem("LAST_AUTH_TYPE", AUTH_SOURCE.FEISHU);
+ let url = new URL("https://open.feishu.cn/open-apis/authen/v1/index");
+ url.searchParams.set("app_id", appId);
+ url.searchParams.set("redirect_uri", REDIRECT_URI);
+ location.href = url.toString();
+}
+function logoutFeishu(){
+ if(!confirm("确定取消 飞书 授权？")) return;
+ localStorage.removeItem("FEISHU_AUTH_CODE");
+ refreshAuthStatus();
+ alert("飞书授权已取消！");
+}
+
+function goDingAuth(){
+ let cid = localStorage.getItem("DING_CLIENTID");
+ if(!cid){ alert("请先配置钉钉 Client ID！"); openAuthConfig(); return; }
+ localStorage.setItem("LAST_AUTH_TYPE", AUTH_SOURCE.DING);
+ let url = new URL("https://login.dingtalk.com/oauth2/auth");
+ url.searchParams.set("client_id", cid);
+ url.searchParams.set("redirect_uri", REDIRECT_URI);
+ url.searchParams.set("response_type", "code");
+ url.searchParams.set("scope", "openid");
+ url.searchParams.set("state", "ding");
+ location.href = url.toString();
+}
+function logoutDing(){
+ if(!confirm("确定取消 钉钉 授权？")) return;
+ localStorage.removeItem("DING_AUTH_CODE");
+ refreshAuthStatus();
+ alert("钉钉授权已取消！");
+}
+
+// 修复授权状态
+function refreshAuthStatus(){
+ let ghOk = !!localStorage.getItem("GITHUB_AUTH_CODE");
+ let fsOk = !!localStorage.getItem("FEISHU_AUTH_CODE");
+ let dingOk = !!localStorage.getItem("DING_AUTH_CODE");
+ 
+ document.getElementById("githubStatus").innerText = ghOk ? "✅ 已授权" : "❌ 未授权";
+ document.getElementById("feishuStatus").innerText = fsOk ? "✅ 已授权" : "❌ 未授权";
+ document.getElementById("dingStatus").innerText = dingOk ? "✅ 已授权" : "❌ 未授权";
+ 
+ document.getElementById("githubResult").innerText = ghOk ? "✅ GitHub 授权成功" : "";
+ document.getElementById("feishuResult").innerText = fsOk ? "✅ 飞书授权成功" : "";
+ document.getElementById("dingResult").innerText = dingOk ? "✅ 钉钉授权成功" : "";
+}
+
+function checkAuthCallback(){
+ let params = new URLSearchParams(location.search);
+ let code = params.get("code");
+ if(!code) { refreshAuthStatus(); localStorage.removeItem("LAST_AUTH_TYPE"); return; }
+ const lastAuth = localStorage.getItem("LAST_AUTH_TYPE");
+ if (lastAuth === AUTH_SOURCE.FEISHU) {
+ localStorage.setItem("FEISHU_AUTH_CODE", code);
+ alert("✅ 飞书授权成功！");
+ } else if (lastAuth === AUTH_SOURCE.DING) {
+ localStorage.setItem("DING_AUTH_CODE", code);
+ alert("✅ 钉钉授权成功！");
+ } else {
+ localStorage.setItem("GITHUB_AUTH_CODE", code);
+ alert("✅ GitHub 授权成功！");
+ }
+ history.replaceState({}, "", REDIRECT_URI);
+ localStorage.removeItem("LAST_AUTH_TYPE");
+ refreshAuthStatus();
+}
+
+// ========== 工具 ==========
+function copyCodeToClipboard(text) {
+ navigator.clipboard.writeText(text).then(()=>{ alert('复制成功！'); }).catch(()=>{
+ const temp = document.createElement('textarea');
+ temp.value = text; document.body.appendChild(temp);
+ temp.select(); document.execCommand('copy');
+ document.body.removeChild(temp); alert('复制成功！');
+ })
+}
+
+function previewCodeInNewWindow(rawCode) {
+ const win = window.open('', '_blank');
+ win.document.open();
+ win.document.write(rawCode);
+ win.document.close();
+}
+
+// 修复：带样式下载完整PPT
+function savePptHtml() {
+ const html = document.documentElement.outerHTML;
+ const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+ const url = URL.createObjectURL(blob);
+ const a = document.createElement('a');
+ a.href = url;
+ a.download = 'PPT_' + new Date().getTime() + '.html';
+ document.body.appendChild(a);
+ a.click();
+ document.body.removeChild(a);
+ URL.revokeObjectURL(url);
+ alert('✅ PPT下载成功！');
+}
+
+// 修复：PDF下载
+function exportPdf() {
+ setTimeout(() => {
+ window.print();
+ }, 300);
+}
+
+// 修复：PPT模板 + 默认显示首页
+const PPT_CONTROL_TPL = `<style>
+@media print{.ppt-top-bar,.ppt-bottom-bar{display:none !important;}.page{display:block !important;margin:0;padding:0;width:100vw;height:100vh;page-break-after:always;}}
+.page{display:none;width:100vw;height:100vh;align-items:center;justify-content:center;font-size:22px;padding:30px;box-sizing:border-box}
+.page.active{display:flex}
+.ppt-bottom-bar{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);display:flex;gap:12px;z-index:99}
+.ppt-top-bar{position:fixed;top:16px;right:20px;display:flex;gap:10px;z-index:99}
+.ppt-bottom-bar button,.ppt-top-bar button{padding:8px 16px;border:none;border-radius:6px;cursor:pointer}
+.ppt-bottom-bar button{background:#0070e0;color:#fff}
+.ppt-top-bar button{background:#16a4a3;color:#fff}
+</style>
+<div class="ppt-top-bar">
+<button onclick="savePptHtml()">下载PPT</button>
+<button onclick="exportPdf()">下载PDF</button>
+</div>
+<div class="ppt-bottom-bar">
+<button onclick="toFirst()">首页</button>
+<button onclick="toPrev()">上一页</button>
+<button onclick="toNext()">下一页</button>
+</div>
+<script>
+let cur=0;const ps=document.querySelectorAll('.page');
+function refresh(){ps.forEach(i=>i.classList.remove('active'));if(ps[cur])ps[cur].classList.add('active')}
+function toFirst(){cur=0;refresh()}
+function toPrev(){if(cur>0){cur--;refresh()}}
+function toNext(){if(cur<ps.length-1){cur++;refresh()}}
+window.onload=function(){refresh()}
+<\/script>`;
+
+// ========== 聊天 & PPT ==========
+const baseApi = document.getElementById('baseUrl').value;
+const msgBox = document.getElementById('msgBox');
+const historyList = document.getElementById('historyList');
+let nowChatId = '';
+let floatMenu = null;
+let currentPPTCode = '';
+const STORAGE_KEY = 'ai_chat_history';
+
+function getAllChats(){
+ const s = localStorage.getItem(STORAGE_KEY);
+ return s ? JSON.parse(s) : [];
+}
+function saveAllChats(list){
+ localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
+}
+
+function closeMenu(){
+ if(floatMenu){ floatMenu.remove(); floatMenu=null; }
+}
+document.addEventListener('click',(e)=>{
+ if(floatMenu && !floatMenu.contains(e.target)) closeMenu();
+})
+
+function showMenu(btn,cid){
+ closeMenu();
+ const r = btn.getBoundingClientRect();
+ floatMenu = document.createElement('div');
+ floatMenu.className = 'global-more-menu';
+ floatMenu.style.left = r.left+'px';
+ floatMenu.style.top = (r.bottom+4)+'px';
+ floatMenu.innerHTML = `
+ <div class="menu-item" onclick="pin('${cid}')">置顶</div>
+ <div class="menu-item" onclick="rename('${cid}')">重命名</div>
+ <div class="menu-item" onclick="del('${cid}')">删除</div>
+ `;
+ document.body.appendChild(floatMenu);
+}
+
+// 修复历史记录渲染
+function renderHistory(){
+ let list = getAllChats();
+ if(!list) list = [];
+ list = list.sort((a, b) => b.id - a.id);
+ historyList.innerHTML = '';
+ list.forEach(item=>{
+ const d = document.createElement('div');
+ d.className = 'history-item '+(item.id==nowChatId?'active':'');
+ d.innerHTML = `${item.title} <button class="more-btn">⋮</button>`;
+ d.querySelector('.more-btn').onclick = (e)=>{
+ e.stopPropagation();
+ showMenu(e.target,item.id);
+ }
+ d.onclick = ()=>{ openChat(item.id); }
+ historyList.appendChild(d);
+ })
+}
+
+// 修复新建对话
+function newChat(){
+ const list = getAllChats() || [];
+ const id = Date.now()+'';
+ list.unshift({id,title:'新对话',msgList:[],type:'chat',pptData:null});
+ saveAllChats(list);
+ nowChatId = id;
+
+ document.getElementById('chatPage').style.display = 'flex';
+ document.getElementById('pptPage').style.display = 'none';
+ document.getElementById('authPage').style.display = 'none';
+ document.getElementById('projectPage').style.display = 'none';
+ document.getElementById('githubPublishPage').style.display = 'none';
+ msgBox.innerHTML = '';
+ renderHistory();
+}
+
+// 修复PPT助手
+function newPPTChat(){
+ const list = getAllChats() || [];
+ const id = Date.now()+'';
+ list.unshift({
+ id,
+ title:'PPT(未生成)',
+ msgList:[],
+ type:'ppt',
+ pptData:{
+ topic:'',
+ outline:'',
+ style:'商务风格',
+ code:'',
+ step:1
+ }
+ });
+ saveAllChats(list);
+ nowChatId = id;
+ loadPPTChat(id);
+}
+
+function openChat(id){
+ closeMenu();
+ const list = getAllChats() || [];
+ const item = list.find(i=>i.id==id);
+ if(!item) return;
+ nowChatId = id;
+
+ if(item.type === 'ppt'){
+ loadPPTChat(id);
+ return;
+ }
+
+ document.getElementById('chatPage').style.display = 'flex';
+ document.getElementById('pptPage').style.display = 'none';
+ document.getElementById('authPage').style.display = 'none';
+ document.getElementById('projectPage').style.display = 'none';
+ document.getElementById('githubPublishPage').style.display = 'none';
+ msgBox.innerHTML = '';
+ (item.msgList || []).forEach(m=>{
+ if(m.type=='user'){
+ msgBox.innerHTML += `<div class="msg user">${m.content}</div>`;
+ }else{
+ let html = marked.parse(m.content);
+ html = addCodeButtons(html);
+ msgBox.innerHTML += `<div class="msg bot">${html}</div>`;
+ }
+ })
+ setTimeout(bindCodeButtons,120);
+ renderHistory();
+}
+
+function loadPPTChat(id){
+ const list = getAllChats() || [];
+ const item = list.find(i=>i.id==id);
+ if(!item || !item.pptData) return;
+
+ document.getElementById('chatPage').style.display = 'none';
+ document.getElementById('pptPage').style.display = 'flex';
+ document.getElementById('authPage').style.display = 'none';
+ document.getElementById('projectPage').style.display = 'none';
+ document.getElementById('githubPublishPage').style.display = 'none';
+ const d = item.pptData;
+
+ document.getElementById('pptTopic').value = d.topic || '';
+ document.getElementById('outlineEdit').innerText = d.outline || '';
+ document.getElementById('pptStyle').value = d.style || '商务风格';
+ currentPPTCode = d.code || '';
+ document.getElementById('pptCodeArea').innerText = currentPPTCode;
+
+ pptStep1.style.display = 'block';
+ pptStep2.style.display = d.step >=2 ? 'block' : 'none';
+ pptStep3.style.display = d.step >=3 ? 'block' : 'none';
+ renderHistory();
+}
+
+function savePPTCurrent(stepUpdate){
+ const list = getAllChats() || [];
+ const item = list.find(i=>i.id==nowChatId);
+ if(!item || item.type!=='ppt') return;
+
+ item.pptData = {
+ topic: document.getElementById('pptTopic').value.trim(),
+ outline: document.getElementById('outlineEdit').innerText.trim(),
+ style: document.getElementById('pptStyle').value,
+ code: currentPPTCode,
+ step: stepUpdate || 1
+ };
+
+ const topic = item.pptData.topic || '未命名PPT';
+ item.title = `PPT：${topic.slice(0,12)}`;
+
+ saveAllChats(list);
+ renderHistory();
+}
+
+function pin(id){
+ closeMenu();
+ const list = getAllChats() || [];
+ const i = list.findIndex(x=>x.id==id);
+ if(i<=0) return;
+ const item = list.splice(i,1)[0];
+ list.unshift(item);
+ saveAllChats(list);
+ renderHistory();
+}
+function rename(id){
+ closeMenu();
+ const t = prompt('输入名称');
+ if(!t) return;
+ const list = getAllChats() || [];
+ const item = list.find(x=>x.id==id);
+ if(item) item.title = t.trim();
+ saveAllChats(list);
+ renderHistory();
+}
+function del(id){
+ closeMenu();
+ if(!confirm('确定删除？')) return;
+ let list = (getAllChats() || []).filter(x=>x.id!=id);
+ saveAllChats(list);
+ if(nowChatId==id){
+ list.length ? openChat(list[0].id) : newChat();
+ }
+ renderHistory();
+}
+
+function goToChat(){ newChat(); }
+function goToPPT(){ newPPTChat(); }
+function pptStep2Hide(){ pptStep2.style.display = 'none'; pptStep3.style.display = 'none'; }
+
+function createLoading(){
+ const dom = document.createElement('div');
+ dom.className = 'loading-msg';
+ dom.innerHTML = '正在生成中<span class="dot"></span><span class="dot"></span><span class="dot"></span>';
+ return dom;
+}
+
+async function pptGenOutline(){
+ savePPTCurrent(1);
+ const topic = document.getElementById('pptTopic').value.trim();
+ if(!topic){ alert('请输入PPT主题！'); return; }
+ 
+ const loading = createLoading();
+ pptStep1.appendChild(loading);
+
+ try {
+ const key = document.getElementById('apiKey').value;
+ const model = document.getElementById('modelSel').value.split('【')[0];
+ const res = await fetch(baseApi + '/chat/completions', {
+ method: 'POST',
+ headers: { 'Content-Type':'application/json', 'Authorization':'Bearer '+key },
+ body: JSON.stringify({
+ model,
+ messages:[{role:'user',content:`请生成标准完整PPT大纲，固定包含：封面页、目录页、正文多页、总结页、结束致谢页，层级清晰，标注每页主题名称。主题：${topic}`}],
+ max_tokens:2000
+ })
+ });
+ const j = await res.json();
+ loading.remove();
+ const outline = j.choices[0].message.content;
+ document.getElementById('outlineEdit').innerText = outline;
+ savePPTCurrent(2);
+ pptStep2.style.display = 'block';
+ } catch (e) {
+ loading.remove();
+ alert('生成失败：'+e.message);
+ }
+}
+
+async function pptGenPages(){
+ savePPTCurrent(2);
+ const outline = document.getElementById('outlineEdit').innerText.trim();
+ const style = document.getElementById('pptStyle').value;
+ if(!outline){ alert('请编辑大纲！'); return; }
+
+ const loading = createLoading();
+ pptStep2.appendChild(loading);
+
+ try {
+ const key = document.getElementById('apiKey').value;
+ const model = document.getElementById('modelSel').value.split('【')[0];
+ const prompt = `
+根据下面PPT大纲生成独立完整HTML网页PPT，所有页面统一用<div class="page">包裹，页面css写在head内，风格${style}，
+**生成HTML末尾强制完整粘贴下面这段代码，一字不漏：${PPT_CONTROL_TPL}**
+硬性规则：
+1、封面/目录/正文/总结/致谢必须全部生成独立.page容器；
+2、不要额外说明，只输出完整html代码；
+大纲：${outline}`;
+ const res = await fetch(baseApi + '/chat/completions', {
+ method: 'POST',
+ headers: { 'Content-Type':'application/json', 'Authorization':'Bearer '+key },
+ body: JSON.stringify({
+ model,
+ messages:[{role:'user',content:prompt}],
+ max_tokens:12000
+ })
+ });
+ const j = await res.json();
+ loading.remove();
+ currentPPTCode = j.choices[0].message.content;
+ document.getElementById('pptCodeArea').innerText = currentPPTCode;
+ savePPTCurrent(3);
+ pptStep3.style.display = 'block';
+ } catch (e) {
+ loading.remove();
+ alert('生成失败：'+e.message);
+ }
+}
+
+function copyPPTCode(){ copyCodeToClipboard(currentPPTCode); }
+function previewPPT(){ previewCodeInNewWindow(currentPPTCode); }
+
+// PPT一键上传GitHub（自动创建项目）
+function uploadPPTToGitHub() {
+ if (!currentPPTCode) {
+ alert("❌ 暂无PPT代码可上传！");
+ return;
+ }
+ const projectName = document.getElementById('pptTopic').value.trim() || "网页版PPT项目";
+ const pid = createSingleFileProject(currentPPTCode, "index.html", projectName);
+ selectedPublishProjectId = pid;
+ openGitHubPublishPage();
+}
+
+// 代码块上传GitHub
+function uploadCodeToGitHub(code) {
+ const pid = createSingleFileProject(code, "index.html", "AI代码项目");
+ selectedPublishProjectId = pid;
+ openGitHubPublishPage();
+}
+
+function addCodeButtons(rawHtml) {
+ const wrap = document.createElement('div');
+ wrap.innerHTML = rawHtml;
+ const preList = wrap.querySelectorAll('pre');
+ preList.forEach(p=>p.classList.add('code-block'));
+ return wrap.innerHTML;
+}
+
+function bindCodeButtons(){
+ document.querySelectorAll('.code-block').forEach(pre=>{
+ if(pre.dataset.binded==='1') return;
+ pre.dataset.binded = '1';
+ const codeText = pre.innerText;
+ const btnWrap = document.createElement('div');
+ btnWrap.className = 'code-btns';
+ const copyBtn = document.createElement('button');
+ copyBtn.innerText = '复制代码';
+ copyBtn.onclick = ()=>copyCodeToClipboard(codeText);
+ const preBtn = document.createElement('button');
+ preBtn.className = 'preview-btn';
+ preBtn.innerText = '预览效果';
+ preBtn.onclick = ()=>previewCodeInNewWindow(codeText);
+ 
+ // 新增：代码块上传GitHub按钮
+ const githubBtn = document.createElement('button');
+ githubBtn.className = 'github-code-btn';
+ githubBtn.innerText = '🚀上传GitHub';
+ githubBtn.onclick = ()=>uploadCodeToGitHub(codeText);
+ 
+ btnWrap.append(copyBtn, preBtn, githubBtn);
+ pre.appendChild(btnWrap);
+ })
+}
+
+async function sendChat(){
+ const content = document.getElementById('userInput').value.trim();
+ if(!content) return;
+ msgBox.innerHTML += `<div class="msg user">${content}</div>`;
+ const loading = createLoading();
+ msgBox.appendChild(loading);
+ document.getElementById('userInput').value = '';
+ 
+ const key = document.getElementById('apiKey').value;
+ const model = document.getElementById('modelSel').value.split('【')[0];
+ try{
+ const res = await fetch(baseApi+'/chat/completions',{
+ method:'POST',
+ headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},
+ body:JSON.stringify({model,messages:[{role:'user',content}]})
+ })
+ const j = await res.json();
+ loading.remove();
+ const reply = j.choices[0].message.content;
+ let html = marked.parse(reply);
+ html = addCodeButtons(html);
+ msgBox.innerHTML += `<div class="msg bot">${html}</div>`;
+
+ autoCreateFullProject(reply, content);
+
+ const list = getAllChats() || [];
+ const item = list.find(i=>i.id==nowChatId);
+ if(item){
+ if(!item.msgList) item.msgList = [];
+ item.msgList.push({type:'user',content});
+ item.msgList.push({type:'bot',content:reply});
+ if(item.title=='新对话') item.title = content.slice(0,12)+'...';
+ saveAllChats(list);
+ renderHistory();
+ }
+ setTimeout(bindCodeButtons,100);
+ }catch(e){
+ loading.remove();
+ msgBox.innerHTML += `<div class="msg bot">错误：${e.message}</div>`;
+ }
+}
+
+document.getElementById('userInput').addEventListener('keydown', function (e) {
+ if (e.key === 'Enter' && !e.shiftKey) {
+ e.preventDefault();
+ sendChat();
+ }
+});
+
+// 初始化（完全修复）
+(function init(){
+ // 绑定按钮
+ document.getElementById('gotoChatBtn').onclick = goToChat;
+ document.getElementById('gotoPPtBtn').onclick = goToPPT;
+ document.getElementById('genOutlineBtn').onclick = pptGenOutline;
+ document.getElementById('genPPTPagesBtn').onclick = pptGenPages;
+ document.getElementById('testBtn').onclick = ()=>{
+ document.getElementById('statusTxt').innerText = '已连通';
+ }
+
+ // 授权回调
+ checkAuthCallback();
+ // 刷新授权状态
+ refreshAuthStatus();
+
+ // 加载历史对话
+ const list = getAllChats() || [];
+ if(list.length > 0){
+ openChat(list[0].id);
+ }else{
+ newChat();
+ }
+})();
 </script>
 </body>
 </html>
