@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>AI Chat · PPT · GitHub Deploy</title>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:system-ui}
+body{display:flex;height:100vh;overflow:hidden;background:#f7f8fa}
+.left{width:280px;background:#fff;border-right:1px solid #e0e0e0;display:flex;flex-direction:column;height:100vh;overflow:hidden;flex-shrink:0}
+.cfg{padding:16px;flex-shrink:0;border-bottom:1px solid #f0f0f0}
+.hw{flex:1;padding:0 14px;display:flex;flex-direction:column;overflow:hidden}
+.hl{flex:1;overflow-y:auto;padding-bottom:10px}
+.ncb{width:100%;padding:9px;background:#0070e0;color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:13px;margin-bottom:6px}
+.ncb.green{background:#16a4a3}.ncb.dark{background:#333}.ncb.blue{background:#2563eb}.ncb.cyan{background:#0ea5e9}
+.ht{font-size:12px;color:#999;margin:10px 0 6px}
+.hi{position:relative;padding:8px 10px;border-radius:6px;margin-bottom:4px;cursor:pointer;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hi.on{background:#e9f2ff;color:#0070e0}.hi:hover{background:#f2f6fc}
+.main{flex:1;display:flex;flex-direction:column;height:100vh;overflow:hidden}
+.mb{flex:1;padding:20px;overflow-y:auto;background:#f7f8fa}
+.ib{padding:14px;background:#fff;border-top:1px solid #e0e0e0;display:flex;gap:10px;flex-shrink:0}
+.ib textarea{flex:1;padding:12px;border:1px solid #ddd;border-radius:8px;height:60px;max-height:140px;font-size:14px;resize:vertical;outline:none}
+.ib button{width:90px;height:60px;border-radius:8px;background:#0070e0;color:#fff;border:none;cursor:pointer;font-size:14px}
+.pp{display:none;flex:1;padding:24px;overflow-y:auto;background:#f7f8fa}
+.ps{margin-bottom:20px}.ps h2{font-size:16px;margin-bottom:10px}
+.ps textarea{width:100%;height:100px;max-height:200px;padding:10px;border-radius:6px;border:1px solid #ddd;resize:vertical}
+.btn-row{display:flex;gap:8px;margin-top:10px}
+.btn{font-size:12px;padding:8px 14px;border-radius:6px;border:none;cursor:pointer}
+.btn-p{background:#0070e0;color:#fff}.btn-g{background:#16a4a3;color:#fff}.btn-d{background:#555;color:#fff}
+.oebox{background:#fff;border:1px solid #d0b0f0;border-radius:8px;padding:14px;min-height:200px;max-height:350px;overflow-y:auto;white-space:pre-wrap;font-size:13px;line-height:1.6;outline:none}
+.msg{padding:12px 14px;border-radius:12px;margin-bottom:14px;max-width:70%;line-height:1.7;max-height:55vh;overflow-y:auto;animation:fi .2s}
+@keyframes fi{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+.msg.u{background:#0072ee;color:#fff;margin-left:auto;border-bottom-right-radius:4px}
+.msg.b{background:#fff;border:1px solid #e0e0e0;border-bottom-left-radius:4px;color:#212529}
+.lmsg{background:#fff;border:1px solid #e0e0e0;border-radius:12px;border-bottom-left-radius:4px;padding:14px 18px;max-width:70%;margin-bottom:14px}
+.dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:#8b949e;margin:0 3px;animation:ld 1.4s infinite ease-in-out}
+.dot:nth-child(2){animation-delay:.2s}.dot:nth-child(3){animation-delay:.4s}
+@keyframes ld{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
+.code-block{position:relative;background:#0d1117;color:#f0f6fc;padding:14px;border-radius:8px;margin:8px 0;max-height:320px;overflow:auto}
+.code-btns{position:absolute;top:8px;right:8px;display:flex;gap:5px}
+.code-btns button{padding:4px 10px;font-size:11px;border-radius:4px;border:none;cursor:pointer;color:#fff}
+.cb-copy{background:#238636}.cb-preview{background:#1f6feb}.cb-project{background:#6e40c9}
+input,select{width:100%;padding:10px;margin:6px 0;border:1px solid #ddd;border-radius:8px;font-size:13px;background:#fafafa;outline:none}
+::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:#ccc;border-radius:3px}
+</style>
+</head>
+<body>
+<div class="left">
+<div class="cfg"><h3 style="font-size:14px;margin-bottom:10px">配置</h3>
+<input id="apiBase" value="http://47.110.254.62:8000/api/chat" placeholder="API地址">
+<select id="mSel"><option value="glm-5v-turbo">GLM-5V Turbo</option><option value="gpt-4o">GPT-4o</option><option value="deepseek-v4-pro">DeepSeek V4</option></select>
+<button class="ncb" onclick="testConn()" style="font-size:12px;padding:7px;margin-top:4px">测试连通</button>
+<div id="st" style="margin-top:6px;font-size:12px"></div>
+</div>
+<div class="hw">
+<button class="ncb" onclick="newChat()">+ 新建对话</button>
+<button class="ncb green" onclick="newPPT()">PPT 生成助手</button>
+<div class="ht">历史对话</div>
+<div class="hl" id="hl"></div>
+</div>
+</div>
+
+<div class="main">
+<div class="mb" id="mb"></div>
+<div class="ib"><textarea id="inp" placeholder="输入内容，Enter 发送" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();send()}"></textarea><button onclick="send()">发送</button></div>
+
+<div class="pp" id="ppPage">
+<div class="ps" id="ps1"><h2>Step 1: 输入PPT主题</h2><textarea id="ppT" placeholder="例: 人工智能的未来"></textarea>
+<div class="btn-row"><button class="btn btn-p" onclick="genOL()">生成大纲</button><button class="btn btn-d" onclick="goChat()">返回对话</button></div></div>
+<div class="ps" id="ps2" style="display:none"><h2>Step 2: 编辑大纲</h2><div class="oebox" contenteditable="true" id="ppO"></div>
+<div style="margin-top:8px"><label>风格:</label><select id="ppS"><option>商务风格</option><option>科技风格</option><option>简约风格</option><option>学术风格</option><option>中国风</option><option>暗黑风</option></select></div>
+<div class="btn-row"><button class="btn btn-g" onclick="genS()">生成网页版PPT</button><button class="btn btn-d" onclick="psS(1)">上一步</button></div></div>
+<div class="ps" id="ps3" style="display:none"><h2>Step 3: 预览PPT</h2>
+<div class="code-block" id="ppC" style="background:#1a1a2e;font-family:monospace;font-size:11px;white-space:pre-wrap;display:none"></div>
+<div id="ppLoad" style="text-align:center;padding:40px;color:#999">生成中，约30-60秒...</div></div>
+</div>
+</div>
+
+<script>
+var api=document.getElementById('apiBase').value;
+var mb=document.getElementById('mb'),hl=document.getElementById('hl'),cs={},currentChat=null;
+var CH=JSON.parse(localStorage.getItem('ch_list')||'[]');
+var ppHTML='',ppData=null,ppStep=1;
+
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+function ts(){return new Date().toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit'})}
+
+function addMsg(role,txt,loading){
+  var d=document.createElement('div');
+  if(loading){d.className='lmsg';d.innerHTML='<span class="dot"></span><span class="dot"></span><span class="dot"></span>';}
+  else{d.className='msg '+(role==='user'?'u':'b');d.innerHTML=role==='assistant'?renderMsg(txt):esc(txt)}
+  mb.appendChild(d);mb.scrollTop=mb.scrollHeight;return role==='assistant'?d:null
+}
+
+function renderMsg(text){
+  marked.setOptions({breaks:true,gfm:true});
+  var html=marked.parse(text);
+  var tmp=document.createElement('div');tmp.innerHTML=html;
+  var blocks=tmp.querySelectorAll('pre code');
+  blocks.forEach(function(ce,i){
+    var code=ce.textContent.trimEnd(),lang='code';
+    var m=(ce.className||'').match(/language-(\w+)/);if(m)lang=m[1];
+    var id='c'+Date.now()+i;cs[id]={lang:lang,code:code};
+    var w=document.createElement('div');w.className='code-block';
+    w.innerHTML='<div class="code-btns"><button class="cb-copy" onclick="cC(\''+id+'\',this)">复制</button><button class="cb-preview" onclick="pV(\''+id+'\')">预览</button><button class="cb-project" onclick="aP(\''+id+'\')">存入项目</button></div><pre><code>'+esc(code)+'</code></pre>';
+    ce.parentElement.replaceWith(w);
+  });
+  return tmp.innerHTML;
+}
+
+function cC(id,btn){var c=cs[id];if(!c)return;navigator.clipboard.writeText(c.code).then(function(){btn.textContent='已复制'}).catch(function(){var t=document.createElement('textarea');t.value=c.code;document.body.appendChild(t);t.select();document.execCommand('copy');document.body.removeChild(t);btn.textContent='已复制'});setTimeout(function(){btn.textContent='复制'},1500)}
+function pV(id){var c=cs[id];if(!c||!c.code)return;var w=window.open('','_blank');if(!w){alert('弹窗被拦截');return}w.document.open();w.document.write(c.code);w.document.close()}
+function aP(id){var c=cs[id];if(!c)return;var nm=prompt('项目名称:',(currentChat&&currentChat.title)||'代码片段');if(!nm)return;var ext=c.lang==='html'?'.html':c.lang==='py'?'.py':'.txt';saveProj(nm+ext,c.code)}
+
+function saveProj(name,code){
+  var ps=JSON.parse(localStorage.getItem('lproj')||'[]');
+  ps.unshift({id:'p'+Date.now(),name:name,code:code,t:new Date().toLocaleString('zh-CN')});
+  localStorage.setItem('lproj',JSON.stringify(ps.slice(0,50)));
+}
+
+function send(){
+  var msg=document.getElementById('inp').value.trim();if(!msg)return;
+  document.getElementById('inp').value='';
+  // Init or use current chat
+  if(!currentChat){currentChat={id:'c'+Date.now(),title:msg.substring(0,20),msgs:[]};CH.unshift(currentChat);saveCH()}
+  currentChat.msgs.push({role:'user',txt:msg});
+  addMsg('user',msg);var e=addMsg('a','',true);
+  var btn=document.querySelector('.ib button');btn.disabled=true;
+  fetch(api,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:msg,model:document.getElementById('mSel').value})})
+  .then(function(r){return r.json()}).then(function(d){
+    currentChat.msgs.push({role:'a',txt:d.reply});saveCH();
+    if(e)e.outerHTML='<div class="msg b">'+renderMsg(d.reply||'')+'</div>';
+    mb.scrollTop=mb.scrollHeight;btn.disabled=false;rH();
+  }).catch(function(err){if(e)e.outerHTML='<div class="msg b" style="color:red">错误: '+err.message+'</div>';btn.disabled=false});
+}
+
+function newChat(){currentChat=null;mb.innerHTML='';document.getElementById('ppPage').style.display='none';document.querySelector('.mb').style.display='block'}
+function testConn(){var b=event.target;b.textContent='测试中...';b.disabled=true;fetch(api,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:'hi',model:document.getElementById('mSel').value})}).then(function(r){return r.json()}).then(function(d){document.getElementById('st').innerHTML=d.reply?'<span style="color:#4caf50">已连接</span>':'<span style="color:#f00">失败</span>'}).catch(function(){document.getElementById('st').innerHTML='<span style="color:#f00">失败</span>'}).finally(function(){b.textContent='测试连通';b.disabled=false})}
+
+function saveCH(){localStorage.setItem('ch_list',JSON.stringify(CH.slice(0,30)))}
+function rH(){
+  hl.innerHTML=CH.map(function(c){return '<div class="hi'+(currentChat&&currentChat.id===c.id?' on':'')+'" onclick="openCH(\''+c.id+'\')">'+esc(c.title)+'</div>'}).join('')||'暂无历史'
+}
+function openCH(id){
+  var c=CH.find(function(x){return x.id===id});if(!c)return;
+  currentChat=c;mb.innerHTML='';document.querySelector('.mb').style.display='block';document.getElementById('ppPage').style.display='none';
+  c.msgs.forEach(function(m){
+    if(m.role==='user')addMsg('user',m.txt);
+    else{var d=addMsg('a',m.txt);}
+  });rH();
+}
+
+/* PPT */
+function goChat(){document.getElementById('ppPage').style.display='none';document.querySelector('.mb').style.display='block'}
+function newPPT(){currentChat=null;ppData=null;ppHTML='';document.querySelector('.mb').style.display='none';document.getElementById('ppPage').style.display='flex';psS(1)}
+function psS(n){ppStep=n;document.getElementById('ps1').style.display=n===1?'block':'none';document.getElementById('ps2').style.display=n===2?'block':'none';document.getElementById('ps3').style.display=n===3?'block':'none'}
+function genOL(){
+  var t=document.getElementById('ppT').value.trim();if(!t){alert('请输入主题');return}
+  var b=event.target;b.textContent='生成中...';b.disabled=true;
+  fetch(api,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:'为以下主题生成PPT大纲(JSON格式,包含title和slides数组,每页有title和points): '+t,model:document.getElementById('mSel').value})})
+  .then(function(r){return r.json()}).then(function(d){
+    try{ppData=JSON.parse(d.reply.match(/\{[\s\S]*\}/)[0])}catch(e){ppData={title:t,slides:[{title:'简介',points:['介绍主题']}]}}
+    document.getElementById('ppO').innerText=JSON.stringify(ppData,null,2);psS(2)
+  }).catch(function(e){alert(e.message)}).finally(function(){b.textContent='生成大纲';b.disabled=false});
+}
+function genS(){
+  try{ppData=JSON.parse(document.getElementById('ppO').innerText)}catch(e){alert('格式错误');return}
+  var s=document.getElementById('ppS').value;psS(3);document.getElementById('ppLoad').style.display='block';document.getElementById('ppC').style.display='none';
+  fetch(api,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:'根据大纲生成HTML幻灯片: '+JSON.stringify(ppData)+', 风格: '+s+', 用<section class=slide>包裹每页, 深色主题, 支持键盘切换',model:document.getElementById('mSel').value})})
+  .then(function(r){return r.json()}).then(function(d){
+    var h=d.reply||'';var m0=h.match(/```html\n([\s\S]*?)```/)||h.match(/<html[\s\S]*<\/html>/i);
+    ppHTML=m0?m0[1]||m0[0]:h;document.getElementById('ppC').textContent=ppHTML;document.getElementById('ppC').style.display='block';document.getElementById('ppLoad').style.display='none';
+    saveProj('PPT_'+ppData.title+'.html',ppHTML);
+  }).catch(function(e){document.getElementById('ppLoad').innerHTML='错误: '+e.message});
+}
+rH();
+</script>
+</body>
+</html>
